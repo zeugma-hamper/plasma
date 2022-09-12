@@ -1,0 +1,35 @@
+# Doxygen configuration for internal documentation.  This includes
+# sources of private directories, and call graphs.  It is much more
+# time consuming than the standard doc build, and includes proprietary
+# information in the generated files.
+
+@INCLUDE               = Doxyfile.common.gen
+#---------------------------------------------------------------------------
+# Project related configuration options
+#---------------------------------------------------------------------------
+PROJECT_NAME           = g-speak (internal)
+HTML_OUTPUT            = internal
+#---------------------------------------------------------------------------
+# Build related configuration options
+#---------------------------------------------------------------------------
+EXTRACT_PRIVATE        = YES
+INTERNAL_DOCS          = YES
+ENABLED_SECTIONS       = INTERNAL
+#---------------------------------------------------------------------------
+# configuration options related to the input files
+#---------------------------------------------------------------------------
+INPUT                  += \
+                          @top_srcdir@/libPlasma/c/private \
+                          #
+FILE_PATTERNS          += *.c *.cpp
+#---------------------------------------------------------------------------
+# configuration options related to source browsing
+#---------------------------------------------------------------------------
+INLINE_SOURCES         = YES
+REFERENCES_LINK_SOURCE = YES
+#---------------------------------------------------------------------------
+# Configuration options related to the dot tool
+#---------------------------------------------------------------------------
+CALL_GRAPH             = YES
+CALLER_GRAPH           = YES
+

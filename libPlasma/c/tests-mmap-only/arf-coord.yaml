@@ -1,0 +1,429 @@
+# g-speak 2.0.57, libYaml 0.1.2                              -*- mode: text -*-
+%YAML 1.1
+%TAG ! tag:oblong.com,2009:slaw/
+--- !protein
+descrips:
+- arf
+- airports
+ingests: !!omap
+- destination: KLAX
+- origin: KSFO
+- pid: !i64 10457
+- time: !f64 1240009221.079
+...
+%YAML 1.1
+%TAG ! tag:oblong.com,2009:slaw/
+--- !protein
+descrips:
+- arf
+- airports
+ingests: !!omap
+- destination: KIAD
+- origin: KSTL
+- pid: !i64 10457
+- time: !f64 1240009223.559
+...
+%YAML 1.1
+%TAG ! tag:oblong.com,2009:slaw/
+--- !protein
+descrips:
+- arf
+- airports
+ingests: !!omap
+- destination: KMIA
+- origin: KDFW
+- pid: !i64 10457
+- time: !f64 1240009225.135
+...
+%YAML 1.1
+%TAG ! tag:oblong.com,2009:slaw/
+--- !protein
+descrips:
+- arf
+- airports
+ingests: !!omap
+- destination: KDEN
+- origin: KLAX
+- pid: !i64 10457
+- time: !f64 1240009227.441
+...
+%YAML 1.1
+%TAG ! tag:oblong.com,2009:slaw/
+--- !protein
+descrips:
+- arf
+- airports
+ingests: !!omap
+- destination: KLAX
+- origin: KMRY
+- pid: !i64 10457
+- time: !f64 1240009229.3629999
+...
+%YAML 1.1
+%TAG ! tag:oblong.com,2009:slaw/
+--- !protein
+descrips:
+- arf
+- airports
+ingests: !!omap
+- destination: KATL
+- origin: CYYZ
+- pid: !i64 10457
+- time: !f64 1240009230.3529999
+...
+%YAML 1.1
+%TAG ! tag:oblong.com,2009:slaw/
+--- !protein
+descrips:
+- arf
+- airports
+ingests: !!omap
+- destination: CYYZ
+- origin: KTPA
+- pid: !i64 10457
+- time: !f64 1240009231.266
+...
+%YAML 1.1
+%TAG ! tag:oblong.com,2009:slaw/
+--- !protein
+descrips:
+- arf
+- airports
+ingests: !!omap
+- destination: KCMH
+- origin: KATL
+- pid: !i64 10457
+- time: !f64 1240009232.1429999
+...
+%YAML 1.1
+%TAG ! tag:oblong.com,2009:slaw/
+--- !protein
+descrips:
+- arf
+- airports
+ingests: !!omap
+- destination: KBNA
+- origin: KJFK
+- pid: !i64 10457
+- time: !f64 1240009232.9760001
+...
+%YAML 1.1
+%TAG ! tag:oblong.com,2009:slaw/
+--- !protein
+descrips:
+- arf
+- airports
+ingests: !!omap
+- destination: KDFW
+- origin: KMAF
+- pid: !i64 10457
+- time: !f64 1240009233.687
+...
+%YAML 1.1
+%TAG ! tag:oblong.com,2009:slaw/
+--- !protein
+descrips:
+- arf
+- airports
+ingests: !!omap
+- destination: KDTW
+- origin: KSDF
+- pid: !i64 10457
+- time: !f64 1240009235.0610001
+...
+%YAML 1.1
+%TAG ! tag:oblong.com,2009:slaw/
+--- !protein
+descrips:
+- arf
+- airports
+ingests: !!omap
+- destination: KATL
+- origin: KORD
+- pid: !i64 10457
+- time: !f64 1240009235.619
+...
+%YAML 1.1
+%TAG ! tag:oblong.com,2009:slaw/
+--- !protein
+descrips:
+- arf
+- airports
+ingests: !!omap
+- destination: KBNA
+- origin: KJFK
+- pid: !i64 10457
+- time: !f64 1240009236.1760001
+...
+%YAML 1.1
+%TAG ! tag:oblong.com,2009:slaw/
+--- !protein
+descrips:
+- arf
+- airports
+ingests: !!omap
+- destination: KPHX
+- origin: KSJC
+- pid: !i64 10457
+- time: !f64 1240009236.7909999
+...
+%YAML 1.1
+%TAG ! tag:oblong.com,2009:slaw/
+--- !protein
+descrips:
+- arf
+- airports
+ingests: !!omap
+- destination: KDEN
+- origin: KDFW
+- pid: !i64 10457
+- time: !f64 1240009237.358
+...
+%YAML 1.1
+%TAG ! tag:oblong.com,2009:slaw/
+--- !protein
+descrips:
+- arf
+- airports
+ingests: !!omap
+- destination: KORD
+- origin: KALB
+- pid: !i64 10457
+- time: !f64 1240009237.983
+...
+%YAML 1.1
+%TAG ! tag:oblong.com,2009:slaw/
+--- !protein
+descrips:
+- arf
+- airports
+ingests: !!omap
+- destination: CEA
+- pid: !i64 23671
+- time: !f64 1136073630
+...
+%YAML 1.1
+%TAG ! tag:oblong.com,2009:slaw/
+--- !protein
+descrips:
+- arf
+- airports
+ingests: !!omap
+- origin: KDEN
+- pid: !i64 23833
+- time: !f64 1136073630
+...
+%YAML 1.1
+%TAG ! tag:oblong.com,2009:slaw/
+--- !protein
+descrips:
+- arf
+- airports
+ingests: !!omap
+- destination: KBOS
+- pid: !i64 5363
+- time: !f64 1136073630
+...
+%YAML 1.1
+%TAG ! tag:oblong.com,2009:slaw/
+--- !protein
+descrips:
+- arf
+- airports
+ingests: !!omap
+- destination: KBOS
+- origin: KDFW
+- pid: !i64 5363
+- time: !f64 1136073630
+...
+%YAML 1.1
+%TAG ! tag:oblong.com,2009:slaw/
+--- !protein
+descrips:
+- arf
+- airports
+ingests: !!omap
+- destination: KICT
+- pid: !i64 19706
+- time: !f64 1136073630
+...
+%YAML 1.1
+%TAG ! tag:oblong.com,2009:slaw/
+--- !protein
+descrips:
+- arf
+- airports
+ingests: !!omap
+- destination: KORD
+- pid: !i64 3564
+- time: !f64 1136073630
+...
+%YAML 1.1
+%TAG ! tag:oblong.com,2009:slaw/
+--- !protein
+descrips:
+- arf
+- airports
+ingests: !!omap
+- destination: KSFO
+- pid: !i64 9167
+- time: !f64 1136073630
+...
+%YAML 1.1
+%TAG ! tag:oblong.com,2009:slaw/
+--- !protein
+descrips:
+- arf
+- airports
+ingests: !!omap
+- destination: KORD
+- pid: !i64 9167
+- time: !f64 1136073630
+...
+%YAML 1.1
+%TAG ! tag:oblong.com,2009:slaw/
+--- !protein
+descrips:
+- arf
+- airports
+ingests: !!omap
+- destination: KSFO
+- origin: KORD
+- pid: !i64 9167
+- time: !f64 1136073630
+...
+%YAML 1.1
+%TAG ! tag:oblong.com,2009:slaw/
+--- !protein
+descrips:
+- arf
+- airports
+ingests: !!omap
+- destination: KBOS
+- pid: !i64 20620
+- time: !f64 1136073630
+...
+%YAML 1.1
+%TAG ! tag:oblong.com,2009:slaw/
+--- !protein
+descrips:
+- arf
+- airports
+ingests: !!omap
+- destination: KLAX
+- pid: !i64 20620
+- time: !f64 1136073630
+...
+%YAML 1.1
+%TAG ! tag:oblong.com,2009:slaw/
+--- !protein
+descrips:
+- arf
+- airports
+ingests: !!omap
+- destination: KBOS
+- origin: KLAX
+- pid: !i64 20620
+- time: !f64 1136073630
+...
+%YAML 1.1
+%TAG ! tag:oblong.com,2009:slaw/
+--- !protein
+descrips:
+- arf
+- airports
+ingests: !!omap
+- destination: KSFO
+- pid: !i64 29938
+- time: !f64 1136073630
+...
+%YAML 1.1
+%TAG ! tag:oblong.com,2009:slaw/
+--- !protein
+descrips:
+- arf
+- airports
+ingests: !!omap
+- destination: KLAX
+- pid: !i64 29938
+- time: !f64 1136073630
+...
+%YAML 1.1
+%TAG ! tag:oblong.com,2009:slaw/
+--- !protein
+descrips:
+- arf
+- airports
+ingests: !!omap
+- destination: KSFO
+- origin: KLAX
+- pid: !i64 29938
+- time: !f64 1136073630
+...
+%YAML 1.1
+%TAG ! tag:oblong.com,2009:slaw/
+--- !protein
+descrips:
+- arf
+- airports
+ingests: !!omap
+- destination: KORD
+- pid: !i64 28371
+- time: !f64 1136081452
+...
+%YAML 1.1
+%TAG ! tag:oblong.com,2009:slaw/
+--- !protein
+descrips:
+- arf
+- airports
+ingests: !!omap
+- destination: KBOS
+- pid: !i64 28473
+- time: !f64 1136075675
+...
+%YAML 1.1
+%TAG ! tag:oblong.com,2009:slaw/
+--- !protein
+descrips:
+- arf
+- airports
+ingests: !!omap
+- destination: KSFO
+- pid: !i64 28473
+- time: !f64 1136076277
+...
+%YAML 1.1
+%TAG ! tag:oblong.com,2009:slaw/
+--- !protein
+descrips:
+- arf
+- airports
+ingests: !!omap
+- destination: KBOS
+- origin: KSFO
+- pid: !i64 28473
+- time: !f64 1136076883
+...
+%YAML 1.1
+%TAG ! tag:oblong.com,2009:slaw/
+--- !protein
+descrips:
+- arf
+- airports
+ingests: !!omap
+- destination: KORD
+- pid: !i64 2902
+- time: !f64 1136091948
+...
+%YAML 1.1
+%TAG ! tag:oblong.com,2009:slaw/
+--- !protein
+descrips:
+- arf
+- airports
+ingests: !!omap
+- destination: SWI
+- time: !f64 1136073630
+- pid: !i64 2462
+...

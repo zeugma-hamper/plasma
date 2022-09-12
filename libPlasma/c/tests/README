@@ -1,0 +1,21 @@
+Notes on writing tests for libPlasma
+
+* stdout, stdin, and the test log
+
+When tests are passing, there should be no output other than that of
+the test framework.  The obvious way to produce this is to send all
+possible output from inside the script to /dev/null.  However, it's
+much more useful if we see the unexpected output when a test fails.
+Also, we want to save the output of the scripts in a test log so that
+we can look at it when something goes wrong.  How to achieve this?
+
+Commands that should succeed: Redirect stdout to the test log:
+
+  ./cmd >>${TEST_LOG}
+
+Commands that should fail: Redirect stderr to the test log:
+
+  ./cmd 2>>${TEST_LOG}
+
+A nice side benefit of this is that you can detect bugs like writing
+error messages to stdout instead of stderr.

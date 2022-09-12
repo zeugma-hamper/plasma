@@ -1,0 +1,47 @@
+#!/bin/sh
+# Run a non-sanitized program that loads a sanitized plugin.
+# This avoids the error
+# "ASan runtime does not come first in initial library list; you should
+# either link runtime to your application or manually preload it with
+# LD_PRELOAD."
+# or
+# "Interceptors are not working. This may be because AddressSanitizer is loaded too late (e.g. via dlopen). Please launch the executable with:
+# DYLD_INSERT_LIBRARIES=/Applications/Xcode8.1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/8.0.0/lib/darwin/libclang_rt.asan_osx_dynamic.dylib"
+
+set -e
+
+if test -f /etc/issue
+then
+    # Really we should find this some other way.
+    asanlib=$(readelf -d "$1" | grep asan | sed 's/.*\[//;s/].*//')
+    if test "$asanlib" != ""
+    then
+        ASAN_PRELOAD="/usr/lib/$(dpkg-architecture -q DEB_TARGET_GNU_TYPE)/$asanlib"
+        if test "${LD_PRELOAD}" != ""
+        then
+            LD_PRELOAD="${LD_PRELOAD}:${ASAN_PRELOAD}"
+        else
+            LD_PRELOAD="${ASAN_PRELOAD}"
+            export LD_PRELOAD
+        fi
+    fi
+elif test -d /Applications
+then
+    # Really we should find this some other way.
+    ASAN_PRELOAD="$(find "$(xcode-select -p)"/Toolchains -name '*asan_osx_dynamic.dylib')"
+    if test "${DYLD_INSERT_LIBRARIES}" != ""
+    then
+        DYLD_INSERT_LIBRARIES="${DYLD_INSERT_LIBRARIES}:${ASAN_PRELOAD}"
+    else
+        DYLD_INSERT_LIBRARIES="${ASAN_PRELOAD}"
+    fi
+
+    # Oddly, 'env' won't show you DYLD_INSERT_LIBRARIES on mac,
+    # and /bin/sh won't obey it.  So... intrepid user, use a non-blessed shell.
+    # e.g. do 'brew install dash'.  And hope your command had no spaces.
+    exec /usr/local/bin/dash -c "DYLD_INSERT_LIBRARIES=${DYLD_INSERT_LIBRARIES} $*"
+
+    # Annoyingly, in my test, the app now hangs after asan's output.
+    # But at least asan works up to that point.
+fi
+"$@"

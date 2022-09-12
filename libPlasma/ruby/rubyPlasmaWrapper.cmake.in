@@ -1,0 +1,4 @@
+#!/bin/sh
+
+export RUBYLIB=.:@PlasmaRubyTests_SOURCE_DIR@:@rubyPlasma_BINARY_DIR@
+exec "$@"

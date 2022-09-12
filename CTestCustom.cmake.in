@@ -1,0 +1,3 @@
+# windows gets confused unless you tell it what interpreter to use
+set(CTEST_CUSTOM_PRE_TEST "@SHELL@ @g-speak_BINARY_DIR@/yotest start all")
+set(CTEST_CUSTOM_POST_TEST "@SHELL@ @g-speak_BINARY_DIR@/yotest stop all")

@@ -1,0 +1,85 @@
+# To create a manpage, format me like this:
+#   pod2man --center "User Commands" --release "Oblong Industries" p-list.pod > p-list.1
+# Then read the manpage with:
+#   man ./p-list.1
+
+=head1 NAME
+
+p-list - print out names of local or remote pools
+
+=head1 SYNOPSIS
+
+B<p-list> S<[ B<-i> ] [ I<server> ]>
+
+=head1 DESCRIPTION
+
+B<p-list> lists all the pools present locally or on the specified
+server.  Additional information about each pool is printed if the
+B<-i> option is specified.
+
+The optional server argument specified a hostname and port (on which a
+pool_tcp_server must be running) in the format
+"tcp://squash.local:1234/".
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-i>
+
+Print additional information along with the pool name.  This
+information is the total pool size, the amount of space currently in
+use (in parentheses), the slaw version and mmap pool version, and
+whether or not the pool has an index.  If the pool has an index, it is
+indicated by a star followed by a number, where the number represents
+the step size of the index.  (e. g. "*1" means every protein is
+indexed, "*2" means every other protein is indexed, etc.)  Pools with
+no index are indicated by not having a star.
+
+In the same position as the pool index information, there may also be
+some additional letters indicating flags which are set on the pool.
+The key for the flags is as follows:
+
+    a - auto-dispose
+    c - checksum
+    f - frozen
+    l - flock
+    s - stop-when-full
+    S - sync
+
+Between the pool name and the additional information is a column which
+contains "X" if the pool is in use (any process has a hose open to
+it), or is blank otherwise.
+
+If there is a problem accessing a pool, there might be an error
+message in place of the extra information.
+
+=back
+
+=head1 EXAMPLES
+
+    bash-3.2$ p-list -i tcp://poolserver.example.com/
+    arf                                         10.00M, (0), s1m0
+    arf-coord                                    1.00M, (6.15K), s1m0
+    bar                                          1.00M, (0), s2m1, S
+    chinchilla                                  64.00K, (0), s2m1
+    dummy-3731                               POOL_FILE_BADTH
+    mouse                                    X   1.00M, (1023.43K), s2m0
+    sample.1283300587.16788                    100.00M, (1.04K), s2m0
+    tenk                                        10.00K, (0), s2m0
+    unwanted-decibels                            1.00M, (0), s2m0, *1
+    white                                        1.00M, (248), s1m0
+
+=head1 ENVIRONMENT
+
+=over 6
+
+=item OB_POOLS_DIR
+
+Specifies the directory where local pools are found.
+
+=back
+
+=head1 AUTHOR
+
+Patrick Pelletier E<lt>ppelletier at oblong dot comE<gt>

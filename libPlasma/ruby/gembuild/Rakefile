@@ -1,0 +1,4 @@
+require 'rake/extensiontask'
+
+spec = Gem::Specification.load("rubyPlasma.gemspec")
+Rake::ExtensionTask.new("rubyPlasma", spec)

@@ -1,0 +1,210 @@
+
+===== test 1 =====
+
+slaw_to_v2: error -210006
+slaw_to_v3: 1.200000, -4.500000, 7.800000
+slaw_to_v4: error -210006
+
+===== test 2 =====
+
+slaw_to_v2: error -210006
+slaw_to_v3: error -210006
+slaw_to_v4: error -210006
+
+===== test 3 =====
+
+slaw_to_v2: error -210006
+slaw_to_v3: error -210006
+slaw_to_v4: error -210006
+
+===== test 4 =====
+
+slaw_to_v2: 36.000000, 36.000000
+slaw_to_v3: 36.000000, 36.000000, 0.000000
+slaw_to_v4: error -210006
+
+===== test 5 =====
+
+slaw_to_v2: error -210006
+slaw_to_v3: 36.000000, 36.000000, 36.000000
+slaw_to_v4: error -210006
+
+===== test 6 =====
+
+slaw_to_v2: error -210006
+slaw_to_v3: error -210006
+slaw_to_v4: 36.000000, 36.000000, 36.000000, 36.000000
+
+===== test 7 =====
+
+slaw_to_v2: error -210006
+slaw_to_v3: error -210006
+slaw_to_v4: error -210006
+
+===== test 8 =====
+
+slaw_to_v2: error -210006
+slaw_to_v3: error -210006
+slaw_to_v4: error -210006
+
+===== test 9 =====
+
+slaw_to_v2: error -210006
+slaw_to_v3: error -210006
+slaw_to_v4: error -210006
+
+===== test 10 =====
+
+slaw_to_v2: 72.000000, 72.000000
+slaw_to_v3: 72.000000, 72.000000, 0.000000
+slaw_to_v4: error -210006
+
+===== test 11 =====
+
+slaw_to_v2: error -210006
+slaw_to_v3: 72.000000, 72.000000, 72.000000
+slaw_to_v4: error -210006
+
+===== test 12 =====
+
+slaw_to_v2: error -210006
+slaw_to_v3: error -210006
+slaw_to_v4: 72.000000, 72.000000, 72.000000, 72.000000
+
+===== test 13 =====
+
+slaw_to_v2: error -210006
+slaw_to_v3: error -210006
+slaw_to_v4: error -210006
+
+===== test 14 =====
+
+slaw_to_v2: error -210006
+slaw_to_v3: error -210006
+slaw_to_v4: error -210006
+
+===== test 15 =====
+
+slaw_to_v2: error -210006
+slaw_to_v3: error -210006
+slaw_to_v4: error -210006
+
+===== test 16 =====
+
+slaw_to_v2: 3.140000, 3.140000
+slaw_to_v3: 3.140000, 3.140000, 0.000000
+slaw_to_v4: error -210006
+
+===== test 17 =====
+
+slaw_to_v2: error -210006
+slaw_to_v3: 3.140000, 3.140000, 3.140000
+slaw_to_v4: error -210006
+
+===== test 18 =====
+
+slaw_to_v2: error -210006
+slaw_to_v3: error -210006
+slaw_to_v4: 3.140000, 3.140000, 3.140000, 3.140000
+
+===== test 19 =====
+
+slaw_to_v2: error -210006
+slaw_to_v3: error -210006
+slaw_to_v4: error -210006
+
+===== test 20 =====
+
+slaw_to_v2: error -210006
+slaw_to_v3: error -210006
+slaw_to_v4: error -210006
+
+===== test 21 =====
+
+slaw_to_v2: error -210006
+slaw_to_v3: error -210006
+slaw_to_v4: error -210006
+
+===== test 22 =====
+
+slaw_to_v2: 3.141590, 3.141590
+slaw_to_v3: 3.141590, 3.141590, 0.000000
+slaw_to_v4: error -210006
+
+===== test 23 =====
+
+slaw_to_v2: error -210006
+slaw_to_v3: 3.141590, 3.141590, 3.141590
+slaw_to_v4: error -210006
+
+===== test 24 =====
+
+slaw_to_v2: error -210006
+slaw_to_v3: error -210006
+slaw_to_v4: 3.141590, 3.141590, 3.141590, 3.141590
+
+===== test 25 =====
+
+slaw_to_v2: error -210006
+slaw_to_v3: error -210006
+slaw_to_v4: error -210006
+
+===== test 26 =====
+
+slaw_to_v2: error -210006
+slaw_to_v3: error -210006
+slaw_to_v4: 8.000000, 9.000000, 10.000000, 11.000000
+
+===== test 27 =====
+
+slaw_to_v2: error -210006
+slaw_to_v3: error -210006
+slaw_to_v4: error -210006
+
+===== test 28 =====
+
+slaw_to_v2: -1.000000, 0.000100
+slaw_to_v3: -1.000000, 0.000100, 0.000000
+slaw_to_v4: error -210006
+
+===== test 29 =====
+
+slaw_to_v2: error -210003
+slaw_to_v3: error -210003
+slaw_to_v4: error -210003
+
+===== test 30 =====
+
+slaw_to_v2: error -210003
+slaw_to_v3: error -210003
+slaw_to_v4: error -210003
+
+===== test 31 =====
+
+slaw_to_v2: 1.000000, 2.000000
+slaw_to_v3: 1.000000, 2.000000, 0.000000
+slaw_to_v4: error -210006
+
+===== test 32 =====
+
+slaw_to_v2: error -210006
+slaw_to_v3: 3.000000, 4.000000, 5.000000
+slaw_to_v4: error -210006
+
+===== test 33 =====
+
+slaw_to_v2: error -210006
+slaw_to_v3: error -210006
+slaw_to_v4: 6.000000, 7.000000, 8.000000, 9.000000
+
+===== test 34 =====
+
+slaw_to_v2: error -210003
+slaw_to_v3: error -210003
+slaw_to_v4: error -210003
+
+===== test 35 =====
+
+slaw_to_v2: error -210006
+slaw_to_v3: error -210006
+slaw_to_v4: 1.000000, 2.000000, 3.000000, 4.000000

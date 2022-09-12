@@ -1,0 +1,55 @@
+/** @defgroup PlasmaZeroconf Plasma zeroconf support
+@{
+This package allows integrating TCP pool servers with system zeroconf
+services.  It consists of an executable, @e
+pool-server-zeroconf-adapter, and a client library, @e
+libPlasmaZeroconf.  It is implemented using Avahi on Linux and Bonjour
+on Mac OS X.
+
+The @e pool-server-zeroconf-adapter process monitors a running TCP pool
+server and communicates with the zeroconf server to notify the latter
+about the appearance (and eventual disapperance) of the pool server.
+Pool servers have a fixed zeroconf service type, namely @c
+_pool-server._tcp, and the corresponding announcement includes both
+their host and port.  According to the zeroconf protocol, servers can
+also be given a service name (defaulting the hostname) and a list of
+services subtypes (defaulting to none).  Both parameters can be provided
+as command line arguments to @e pool-server-zeroconf-adapter.  You can
+see the complete list of accepted parameters using @c -h:
+
+@code
+$ ./pool-server-zeroconf-adapter -h
+g-speak SOE (c) 2010 Oblong Industries - g-speak 2.0.55
+pool-server-zeroconf-adapter [-u secs]
+                             [-z <name>] [-t <subtypes>]
+                             [-n] [-v] [-h]
+                             [address]
+       address: monitored server address (tcp://localhost/)
+       -u seconds between liveness checks (%d secs)
+       -z name of the zeroconf service (host)
+       -t comma-separated list of zeroconf subtypes
+       -n keep process in foreground
+       -v verbose output
+       -h this help message
+@endcode
+
+As you can see above, it is possible to explicitly specify the fully
+qualified address of the server (e.g. @c tcp://host.name:4567/).  The
+announcer will check that the server is alive every 5 seconds (tunnable
+using the @c -u switch), and notify the zeroconf system services with
+corresponding added and removed events.
+
+Once a pool server has an accompanying announcer process up and running,
+its status in the local network can be monitored by any zeroconf
+browsing tool (e.g., @e avahi-browse in Linux and @e ms-dns in Mac OS),
+independently of any plasma library or executable.  It is also possible
+to write your own browsing services directly using the Avahi or Bonjour
+libraries.  We provide, however, a multiplatform wrapper around those
+libraries, which is also aware of the concept of a plasma pool server in
+our @ref PlasmaxxPoolServerBrowser API, which build on top of the
+PoolServer abstraction, providing a programmatic way of listing pool
+servers in the network and of reacting to their entering and leaving it.
+
+**/
+
+/**@}*/

@@ -1,0 +1,14 @@
+/* Needed by gstpool.c */
+#define VERSION "@VERSION@"
+/* Needed by gstpool.c */
+#define PACKAGE "g-speak"
+/* Needed by libMedia */
+#cmakedefine HAVE_GSTREAMER 1
+#cmakedefine HAVE_GNUTLS 1
+/* Needed by libPlasma */
+#cmakedefine HAVE_OPENSSL_ECC 1
+/* Needed by libSplotch */
+#cmakedefine HAVE_EGL 1
+/* Needed by quartermaster */
+#cmakedefine HAVE_BLACKMAGIC 1
+#cmakedefine HAVE_INOGENI 1

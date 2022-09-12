@@ -1,0 +1,25 @@
+This file contains doc sources and configuration files for building the following documentation sets:
+
+Platform documentation
+  build file: Doxyfile
+  inputs: lib*, for shipping lib* directories
+
+Documentation for the public APIs of the shipping portion of the platform.
+This build is intended for application developers, who are *using* the
+platform but not (generally) *modifying its sources*.
+
+Application documentation
+  build file: Doxyfile.apps
+  inputs: apps and samples
+  configuration: links to platform documentation
+
+Documents the apps and samples. This contains links to, but does not
+incorporate, the platform documentation.
+
+Internal documentation
+  build file: Doxyfile.internal
+  inputs: lib*, including non-shipping directories
+  configuration: includes private and internal docs, source code, and call graphs
+
+Documentation for shipping and non-shipping code, annotated with call graphs.
+Intended as a source browser and analysis tool for platform developers.

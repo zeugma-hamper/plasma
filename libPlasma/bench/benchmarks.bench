@@ -1,0 +1,154 @@
+## (c) 2010 Oblong Industries #
+
+## Benchmark scripts setup and environment
+
+PCREATE=@builddir@/../c/p-create
+PSTOP=@builddir@/../c/p-stop
+PTCP=@builddir@/../c/pool_tcp_server
+BUTTER=@builddir@/butter
+BREAD=@builddir@/bread
+SANDWICH=@builddir@/sandwich
+BRAID=@builddir@/braid
+
+WORKING_DIR=""
+BENCHMARK=""
+DEFAULT_POOL=""
+OB_DIR_ORG=${OB_DIR}
+
+function clean_slate () {
+    rm -f ${WORKING_DIR}/*.dat
+    rm -f ${WORKING_DIR}/*.log
+}
+
+function start_benchmark () {
+    echo "Starting benchmark '$1'..."
+    BENCHMARK=${1:-benchmark}
+    WORKING_DIR=./benchmarks/${BENCHMARK}
+    export OB_DIR=${WORKING_DIR}
+    mkdir -p ${OB_DIR}/pools
+    mkdir -p ${WORKING_DIR}
+}
+
+function start_clean_benchmark () {
+    start_benchmark $1
+    clean_slate
+}
+
+function end_benchmark () {
+    echo "Waiting for '${BENCHMARK}' to finish..."
+    wait
+    echo "...finished. Results in ${WORKING_DIR}."
+}
+
+function is_tcp_pool () {
+    [ ${1:0:6} == "tcp://" ];
+}
+
+function normalize_pool_name () {
+    echo $1 | tr ":/" "-";
+}
+
+function with_pool_x () {
+    flag=$1
+    shift
+    DEFAULT_POOL=$1
+    flags="$flag -s $2 -i $3"
+    echo " Creating pool $1 with flags $flags"
+    ${PCREATE} $flags $1 || exit 1
+    if is_tcp_pool $1; then
+        export OB_DIR=${OB_DIR_ORG}
+    fi
+}
+
+function with_pool () {
+    with_pool_x -q $*
+}
+
+function with_new_pool () {
+    with_pool_x -z $*
+}
+
+function end_pool () {
+    echo " Deleting ${DEFAULT_POOL}"
+    wait
+    ${PSTOP} ${DEFAULT_POOL}
+}
+
+function with_existing_pool () {
+    if is_tcp_pool $1; then
+        export OB_DIR=${OB_DIR_ORG}
+        DEFAULT_POOL=$1
+    else
+        export OB_DIR=$(dirname $1)
+        DEFAULT_POOL=$(basename $1)
+    fi
+}
+
+function with_existing_pools () {
+    echo " Using existing pools $*"
+    with_existing_pool $1;
+}
+
+function butter () {
+    echo " Writing $1 batches of $2 proteins (sizes $3) to ${DEFAULT_POOL}..."
+    ${BUTTER} ${DEFAULT_POOL} $1 $2 $3 \
+        1>>${WORKING_DIR}/$4.dat 2>>${WORKING_DIR}/$4.log
+    echo " ...done."
+}
+
+function butter_p () {
+    echo " Writing $1 batches of $2 proteins (sizes $3) to ${DEFAULT_POOL}..."
+    ${BUTTER} ${DEFAULT_POOL} $1 $2 $3 \
+        1>>${WORKING_DIR}/$4.dat 2>>${WORKING_DIR}/$4.log &
+}
+
+function bread () {
+    echo " Reading $1 $3 batches of $2 proteins from ${DEFAULT_POOL}..."
+    ${BREAD} ${DEFAULT_POOL} $1 $2 $3 \
+        1>>${WORKING_DIR}/$4.dat 2>>${WORKING_DIR}/$4.log
+    echo " ...done."
+}
+
+function bread_p () {
+    echo " Reading $1 $3 batches of $2 proteins from ${DEFAULT_POOL} (async)"
+    ${BREAD} ${DEFAULT_POOL} $1 $2 $3 \
+        1>>${WORKING_DIR}/$4.dat 2>>${WORKING_DIR}/$4.log &
+}
+
+function jam () {
+    ${BREAD} ${DEFAULT_POOL} 1 $1 random >/dev/null 2>&1
+}
+
+function sandwich () {
+    echo " Syncronous read/writes '$2'..."
+    local iters=$1
+    local out=$2
+    shift 2
+    ${SANDWICH} ${DEFAULT_POOL} $iters $* \
+        1>>${WORKING_DIR}/${out}.dat 2>>${WORKING_DIR}/${out}.log
+    echo " ...done."
+}
+
+function sandwich_p () {
+    echo " Asyncronous read/writes '$2'..."
+    local iters=$1
+    local out=$2
+    shift 2
+    ${SANDWICH} ${DEFAULT_POOL} $iters $* \
+        1>>${WORKING_DIR}/${out}.dat 2>>${WORKING_DIR}/${out}.log &
+}
+
+function braid () {
+    echo " Ping-pong match ('$5') of $1 batches of $2 proteins..."
+    ${BRAID} ${DEFAULT_POOL} $1 $2 $3 $4 \
+       ${WORKING_DIR}/$5.ping.dat ${WORKING_DIR}/$5.pong.dat \
+        2>>${WORKING_DIR}/$5.log
+    echo " ... '$5' finished"
+}
+
+function braid_p () {
+    echo " Async ping-pong match ('$5') of $1 batches of $2 proteins..."
+    ${BRAID} ${DEFAULT_POOL} $1 $2 $3 $4 \
+       ${WORKING_DIR}/$5.ping.dat ${WORKING_DIR}/$5.pong.dat \
+        2>>${WORKING_DIR}/$5.log &
+}

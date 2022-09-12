@@ -1,0 +1,18 @@
+go here:
+
+http://www.stack.nl/~dimitri/doxygen/download.html#latestsrc
+
+get this for Mac OS X 10.5 (Leopard) and 10.6 (Snow Leopard):
+
+http://ftp.stack.nl/pub/users/dimitri/Doxygen-1.7.1.dmg
+
+copy to applications.
+
+then do something like this to get the binaries in the path:
+
+$ sudo cp /Applications/Doxygen.app/Contents/Resources/[a-z]* /usr/local/bin/.
+
+---
+
+right now javadoc and native are enabled. i personally use javadoc for
+multiline but native //! for oneliners.

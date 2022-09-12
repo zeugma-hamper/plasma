@@ -1,0 +1,29 @@
+#!/bin/sh
+# Wrapper around meson (or whatever) to set the
+# variables needed by pkgconfig and cmake to
+# detect g-speak's libraries.
+
+# We could export these, but let's not for now.
+YOBUILD=@YOBUILD@
+G_SPEAK_HOME=@G_SPEAK_HOME@
+DEB_TARGET_GNU_TYPE=@CMAKE_DEB_TARGET_GNU_TYPE@
+
+set -ex
+
+# Instead, let's export PKG_CONFIG_PATH and BOOST_ROOT, which are understood by many build tools.
+
+# Annoyingly, boost does not provide .pc files for pkgconfig.
+export BOOST_ROOT=$YOBUILD
+
+if test "$PKG_CONFIG_PATH" != ""
+then
+  export PKG_CONFIG_PATH="$YOBUILD/lib/pkgconfig:$YOBUILD/lib/$DEB_TARGET_GNU_TYPE/pkgconfig:$G_SPEAK_HOME/lib/$DEB_TARGET_GNU_TYPE/pkgconfig:$G_SPEAK_HOME/lib/pkgconfig:$PKG_CONFIG_PATH"
+else
+  export PKG_CONFIG_PATH="$YOBUILD/lib/pkgconfig:$YOBUILD/lib/$DEB_TARGET_GNU_TYPE/pkgconfig:$G_SPEAK_HOME/lib/$DEB_TARGET_GNU_TYPE/pkgconfig:$G_SPEAK_HOME/lib/pkgconfig"
+fi
+
+# Find our meson...?
+#PATH=$YOBUILD/bin:$PATH
+
+# Finally, run the command of interest (e.g. meson ..).
+"$@"

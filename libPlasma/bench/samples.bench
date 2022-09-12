@@ -1,0 +1,140 @@
+#!/bin/bash
+# -*- bench -*-
+
+. ./benchmarks.sh
+
+# output of this benchmark will go to ./benchmarks/simple
+# (pools will be created in ./benchmarks/simple/pools)
+start_benchmark simple
+
+# pool name, pool size, index capacity
+# (you can also use: 'with_existing_pool /full/path/to/pool',
+#  which will set /full/path/to as the OB_DIR for pools)
+with_pool p0 10M 1000
+
+# bench utter (write proteins):
+#    batches, batch size, protein sizes, output file
+# timing statistics go to ./benchmarks/simple/write0.out,
+# errors and other logs to ./benchmarks/simple/write0.log
+butter 100 10 10K,2K write0
+
+# besides a protein size, you can also specify a descrip
+# (of type string) that will be attached to the protein:
+butter 10 10 23k/one,10,1k/two tagged_write
+
+# bench read (read proteins): batches, batch size, read mode, output file
+# possible read modes:
+#  - forward: forward from current index
+#  - oldest: forward from beginning of pool
+#  - newest: forward from end of pool
+#  - backward: backward from current index
+#  - tail: backward from end of pool
+#  - random: each read index picked at random
+# forward, oldest and newest won't wait by default. If you want them
+# to wait, put the waiting period (a double, in secs.) after a dash (e.g.
+# forward/0.1, newest/10, oldest/-1 ...). In addition, you can
+# match against a specific string descrip: forward/0/tag, newest/2.1/tag2...
+# timing statistics go to ./benchmarks/simple/random0.dat
+# errors and other logs to ./benchmarks/simple/random0.log
+bread 10 100 random random0
+
+# reads 10 batches of 3 proteins with descrip 'two', starting
+# from the end of the pool and going backwards.
+bread 10 3 tail/two reading_twos
+
+# waits until all started processes finish
+end_benchmark
+
+# --------------------------------------------------------------
+
+# you can define as many benchmarks as you want:
+# they're executed sequentially.
+start_benchmark simple_parallel
+
+with_new_pool p1 20M 1000
+
+butter 100 100 100b utterer
+
+# the three guys below run in parallel
+butter_p 100 100 100/par parwriter
+bread_p 10 100 newest/0.02/par parreader
+bread_p 1000 10 tail tailread
+
+end_benchmark
+
+# --------------------------------------------------------------
+
+start_benchmark sandwich_test
+
+with_pool p0 10Mb 1000
+
+butter 100 100 10,20,30 utterer
+
+# serial readers/writers:
+#   iterations, output, [r <read params> | [u|s] <write params>]+
+# (the difference between u and s is that the latter moves (runouts) the
+#  pool index to after writing).
+# Additionally, you can specify a pool name after [usr], as in u/p0.
+# in this example, we run 10 times a process that first reads
+# 10 batches of 10 proteins backwards, then writes 1 batch of
+# 100 proteins with alternating sizes 19 and 2 and, finally,
+# reads 10 batches of 10 proteins from the index it ended reading before.
+sandwich_p 10 sandw r 10 10 tail u 1 100 19,2 r 10 2 forward
+
+# another sandwich reading first at random, then backward, then forward, once.
+sandwich 1 sandw2 r 20 5 random r 20 1 backward r 20 1 forward/1
+
+end_benchmark
+
+# --------------------------------------------------------------
+
+# An example of sandwiches operating on multiple pools
+start_benchmark multipool
+
+PH=tcp://localhost
+p0=$PH/p0
+p1=$PH/p1
+p2=$PH/p2
+
+with_existing_pools $p0 $p1 $p2
+
+sandwich 1 wswch u/$p0 5 10 1k u/$p1 100 10 128 u/$p2 10 10 1k,2k
+sandwich 1 rswch r/$p1 10 10 oldest r/$p0 100 1 tail r/$p2 10 10 random
+
+end_benchmark
+
+# --------------------------------------------------------------
+
+# A braid example
+
+start_benchmark braid_test
+
+with_pool p0
+
+# Runs 100 ping-pong batches of 10 proteins each between two
+# processes, exchanging proteins of alternative payloads 10 and 42.
+# The reads have a timeout of 1 sec, and outputs go to foo.ping.dat
+# and foo.pong.dat, while foo.log contains the (garbled, i'm afraid)
+# errors.
+braid 100 10 10,42 1 foo
+
+end_benchmark
+
+# --------------------------------------------------------------
+
+# A descrip matching example
+
+start_benchmark matching
+
+with_pool p0 100M 5k
+
+butter_p 10 100 10/t1,10,10/t2,10 writer
+bread_p 10 10 oldest/2/t1 t1reader
+bread 10 10 forward/1/t2 t2reader
+
+# matching is also available for sandwiches:
+# here we have a braid-like construct based on them.
+sandwich_p 10 s1 r 1 1 forward/1/t3 u 1 1 10k/t4
+sandwich 10 s2 u 2 1 2k/t3,10 r 1 1 oldest/1/t4
+
+end_benchmark

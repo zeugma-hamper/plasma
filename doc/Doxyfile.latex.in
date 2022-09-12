@@ -1,0 +1,18 @@
+@INCLUDE               = Doxyfile.common.gen
+#---------------------------------------------------------------------------
+# Build related configuration options
+#---------------------------------------------------------------------------
+EXTRACT_ALL            = NO
+#---------------------------------------------------------------------------
+# configuration options related to the HTML output
+#---------------------------------------------------------------------------
+GENERATE_HTML          = NO
+#---------------------------------------------------------------------------
+# configuration options related to the LaTeX output
+#---------------------------------------------------------------------------
+GENERATE_LATEX         = YES
+# These cause errors: PDF_HYPERLINKS, USE_PDFLATEX
+#PDF_HYPERLINKS         = YES
+USE_PDFLATEX           = YES
+IMAGE_PATH             += build/images
+

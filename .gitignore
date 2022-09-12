@@ -1,0 +1,111 @@
+*.[oa]
+*.la
+*.lo
+
+.libs/
+.deps/
+
+# Editors
+*~
+.*.swp
+*.bak
+
+# pod2html, misc Makefile rules
+*.tmp
+
+# KDiff3
+*.orig
+
+/autom4te.cache/
+/configure
+/config.h
+/config.h.in
+/config.log
+/config.status
+/aclocal.m4
+/am/shave
+/am/shave-libtool
+/stamp-h1
+/build-aux/
+/libtool
+.dirstamp
+
+FindGSpeak.cmake
+
+.gdb_history
+.dirstamp
+
+.DS_Store
+TAGS
+
+# Windows
+*.exe
+*.exe.manifest
+*.ilk
+*.pdb
+*.ncb
+*.suo
+*.user
+*.sdf
+Debug/
+Release/
+DebugStatic/
+ReleaseStatic/
+
+# tests
+scratch/
+log/
+log-*/
+
+# Xcode?
+*.mode1v3
+*.pbxuser
+
+# default prefix
+/install/
+
+# Eclipse
+/.project
+/.cproject
+
+# VSCode
+/.vscode
+
+# Mac debugging symbols
+*.dSYM/
+
+# make dist
+/g-speak-*.tar.gz
+
+# Generated pkg-config files
+*.pc
+
+rpmbuild/
+debbuild/
+btmp/
+btmp-*
+
+bs-*.dat
+deps.out
+mk-build-deps.log
+typescript
+gstreamer-registry.bin
+
+# debian
+*_*.deb
+*_*.buildinfo
+*_*.build
+*_*.changes
+obj-*-linux-*/
+
+# Emacs
+.dir-locals.el
+
+#ccls
+.ccls-cache/
+
+#clang-format
+.clang-format
+
+# Common cmake dirs
+build

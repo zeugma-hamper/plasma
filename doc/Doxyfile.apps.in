@@ -1,0 +1,17 @@
+@INCLUDE               = Doxyfile.common.gen
+#---------------------------------------------------------------------------
+# Project related configuration options
+#---------------------------------------------------------------------------
+PROJECT_NAME           = g-speak Applications and Samples
+HTML_OUTPUT            = apps
+#---------------------------------------------------------------------------
+# configuration options related to the input files
+#---------------------------------------------------------------------------
+INPUT                  = \
+                       @top_srcdir@/samples \
+                       #
+#---------------------------------------------------------------------------
+# Configuration::additions related to external references
+#---------------------------------------------------------------------------
+TAGFILES               = build/g-speak.tag=../html
+

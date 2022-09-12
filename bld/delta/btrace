@@ -1,0 +1,6 @@
+#!/bin/sh
+cat > back.tmp <<_EOF_
+bt
+quit
+_EOF_
+gdb -p $1 -x back.tmp < /dev/null

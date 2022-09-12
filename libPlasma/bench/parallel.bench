@@ -1,0 +1,31 @@
+#!/bin/bash
+# Call as ./parallel.sh <pool_name> <batches> <bsize> <psize> <read-mode>...
+
+. @builddir@/benchmarks.sh
+
+pool=$1
+batches=$2
+bsize=$3
+psize=$4
+pno=$((batches*bsize))
+
+start_benchmark "par-$(normalize_pool_name $pool)"
+
+with_new_pool $pool 1G $pno
+
+butter $batches $bsize $psize utter-empty
+
+# just for scrambling memory before measuring reads
+jam $((pno/2))
+
+butter_p $batches $bsize $psize utter
+
+shift 4
+i=0
+for m in $*; do
+    bread_p $batches $bsize $m read-$i
+    i=$((i+1))
+done
+
+end_benchmark
+

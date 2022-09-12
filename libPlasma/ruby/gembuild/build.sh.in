@@ -1,0 +1,40 @@
+#!/bin/sh
+set -e
+set -x
+
+# This is a bag on the side of the existing Ruby extension packaging.
+# Instead of building the Ruby extension directly,
+# it bundles it up as a source gem for the user to install,
+# thus letting the user choose the version of Ruby (and of g-speak
+# or greenhouse!) to bind to.
+
+MYVERSION=@MAJOR_VERSION@.@MINOR_VERSION@.@MICRO_VERSION@
+
+MYLIBFILES="Pool.rb Protein.rb SlawInputFile.rb SlawOutputFile.rb Slaw.rb"
+MYEXTFILES="rubyPlasma.c rubySlaw-ilk-macros.h"
+
+# To handle both in-tree and out-of-tree builds, do all the work in a temp directory
+MYDIR=`mktemp -d /tmp/tmp.rubyPlasma.XXXXXXXX`
+echo Building source gem in $MYDIR
+mkdir $MYDIR/lib
+# Copy generate source files
+cp -a @abs_top_builddir@/libPlasma/ruby/gembuild/rubyPlasma.gemspec $MYDIR
+# Copy ungenerated source files verbatim
+cp -a @abs_top_srcdir@/libPlasma/ruby/gembuild/* $MYDIR
+for f in $MYLIBFILES
+do
+    cp @abs_top_srcdir@/libPlasma/ruby/$f $MYDIR/lib/$f
+done
+for f in $MYEXTFILES
+do
+    cp @abs_top_srcdir@/libPlasma/ruby/$f $MYDIR/ext/rubyPlasma/$f
+done
+cd $MYDIR
+
+# Really, here's the only line that does anything.
+# All the rest is scaffolding that should be simplified away.
+gem build rubyPlasma.gemspec
+
+cp *.gem @abs_top_builddir@/libPlasma/ruby/gembuild
+cd @abs_top_builddir@
+rm -rf $MYDIR

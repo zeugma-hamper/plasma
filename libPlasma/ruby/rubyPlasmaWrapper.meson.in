@@ -1,0 +1,4 @@
+#!/bin/sh
+
+export RUBYLIB=.:@abs_top_srcdir@/libPlasma/ruby:@abs_top_builddir@/libPlasma/ruby
+exec "$@"

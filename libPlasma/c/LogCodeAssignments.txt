@@ -1,0 +1,100 @@
+slaw:
+
+0x20000000 probu-compat.c
+0x20001000 slaw.c
+0x20002000 slaw-io.c
+0x20003000 slaw-v1.c
+0x20004000 slaw-walk.c
+0x20005000 slaw-yaml.c
+0x20006000 protein.c
+
+pools:
+
+0x20100000 fifo_ops.c
+0x20101000 pool.c
+0x20102000 pool_cmd.c
+0x20103000 pool-index.c
+0x20104000 pool_mmap.c
+0x20105000 pool_multi.c
+0x20106000 pool_net.c
+0x20107000 pool-portable.c
+0x20108000 pool_tcp.c
+0x20109000 pool_tcp_server.c
+0x2010a000 sem_ops.c
+0x2010b000 win32/fifo_ops_win32.c
+0x2010c000 win32/sem_ops_win32.c
+0x2010d000 pool-log.c
+0x2010e000 zeroconf-{bonjour,avahi}.c
+0x2010f000 pool-fifo.c
+0x20110000 pool-mmap-header.c
+0x20111000 pool-context.c
+0x20112000 pool-lock-ops.c
+
+utilities:
+
+0x20200000 fill_pool.c
+0x20201000 matrix_test.c
+0x20202000 multi_test.c
+0x20203000 p-create.c
+0x20204000 p-list.c
+0x20205000 simple_read.c
+0x20206000 yaml2bin.c
+
+slaw tests:
+
+0x20300000 t/endian_test.c
+0x20301000 t/ilk-begotten.c
+0x20302000 t/ilk-begotten-helper.c
+0x20303000 t/ins-rep.c
+0x20304000 t/listcat_test.c
+0x20305000 t/list-search.c
+0x20306000 t/map-merge.c
+0x20307000 t/nonconformist.c
+0x20308000 t/rumpus-room.c
+0x20309000 t/simple-list.c
+0x2030a000 t/simple-numerics.c
+0x2030b000 t/slabu-list.c
+0x2030c000 t/slabu-map.c
+0x2030d000 t/spew-multi.c
+0x2030e000 t/spew-test.c
+0x2030f000 t/test-boolean.c
+0x20310000 t/test-interop.c
+0x20311000 t/test-map.c
+0x20312000 t/test_new_stuff.c
+0x20313000 t/test-path.c
+0x20314000 t/test-slaw-flush.c
+0x20315000 t/test-string.c
+0x20316000 t/test-yaml.c
+0x20317000 t/various-types.c
+0x20318000 t/yaml-all-numeric.c
+0x20319000 t/yaml-options.c
+0x2031a000 t/test-pack.c
+
+pool tests:
+
+0x20400000 tests/await_test.c
+0x20401000 tests/check-stepsize-behavior.c
+0x20402000 tests/deposit-timestamp.c
+0x20403000 tests/doppelganger.c
+0x20404000 tests/empty-gang.c
+0x20405000 tests/many_creates.c
+0x20406000 tests-mmap-only/fifo_exists.c
+0x20407000 tests-mmap-only/remove_sem.c
+0x20408000 tests/null_test.c
+0x20409000 tests/participate_create.c
+0x2040a000 tests/perf_test.c
+0x2040b000 tests/pingpong_test.c
+0x2040c000 tests/random-access-test.c
+0x2040d000 tests/rewind_test.c
+0x2040e000 tests/seek_test.c
+0x2040f000 tests/test-await-index.c
+0x20410000 tests/test-bigger.c
+0x20411000 tests/test-info.c
+0x20412000 tests/test-multi-await.c
+
+OpenSSL binding:
+
+0x20500000 ossl/ossl-common.c
+0x20501000 ossl/ossl-io.c
+0x20502000 ossl/ossl-server.c
+0x20503000 ossl/ossl-validation.c

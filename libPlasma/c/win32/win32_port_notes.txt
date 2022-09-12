@@ -1,0 +1,1126 @@
+The document below was written in May 2009. Much of what was written still applies and
+is quite relevant. Refer to yovo/README.win32 for the most up-to-date information about
+developing on Windows, and yovo/windows/may_2010_port_notes.txt for comments about the
+April/May 2010 port.
+
+--Begin document from May 2009--
+
+--==libPlasma for Windows==--
+
+--------
+Overview
+--------
+
+The Windows port of libPlasma includes all of the p-* binaries, the
+pool_tcp_server binary, all of the test binaries, all of the test
+shell scripts (which are runnable on windows using the bash shell that
+came along with git for windows), and remote_ui_client.
+
+This document details all of the changes made to get things working,
+with notes for every source file, function, and structure that required
+substantial change.
+
+For information about building and running the win32 executables, refer
+to the yovo/win32_build_notes.txt document.
+
+-----------------------
+What hasn't been ported
+-----------------------
+
+There is still some code that has not been ported, notably -
+
+pool_impl.h
+  pool_hose_struct.sem_key
+    The sem_key member is initialized with a value of -1 in win32_sem_ops.c,
+    but not used for anything other than writing to and from the pool config
+    file. I'm honestly not sure why sem_key exists (??).
+
+pool_cmd.c
+  check_for_leaked_file_descriptors_scoped()
+    There are some ways for checking leaks but I have not found any that are
+    are drop-in replacement for this function. This needs further exploration.
+
+------------------------
+Where are the new files?
+------------------------
+
+Most of the changes are done inline in the existing .c files. I use
+#ifdef _MSC_VER to isolate the windows code from the linux/osx code.
+
+These files are in libPlasma/win32 :
+
+  win32_port_notes.txt - You're reading this document now.
+
+  libPlasmaWin32.sln
+    This is the main Visual Studio 2008 solution file, open this to do any work or
+    debugging.
+
+  *.vcproj
+    These are individual project files used by the .sln.
+
+  sem_ops_win32.c
+    Windows implementation of sem_ops.c
+
+  fifo_ops_win32.c
+    Windows implementation of fifo_ops.c
+
+  pthread_win32.h
+    This is a *very* minimal implementation of <pthread.h> for windows,
+    which includes only enough functionality to successfully run the
+    libPlasma tests which depend on pthreads.
+
+  make_debug.bat and make_release.bat
+    Command-line build of libPlasma, all tests, p-* executables,
+    pool_tcp_server, and remote_ui_client in debug or release mode
+    (both build modes output into the same location so if you build one it
+    will overwrite the other).
+
+  make_clean.bat
+    Command-line clean of both debug and release builds
+
+These are in libPlasma/tests :
+
+  make_check_win32.sh
+    Runs all of the test scripts on local pools
+
+  make_check_win32_net.sh
+    Runs all of the test scripts on a remote pool. You must edit this
+    file and put in the correct tcp://pool_location before running.
+
+These are in libLoam/win32 :
+
+  ob-sys-win32.h and ob-sys-win32.c
+    Header and implementation of helper functions, refer to the notes for
+    ob-sys-win32.h for more discussion.
+
+  ob-api.h
+    defines import/export macros to allow building and linking to .dll's
+
+--------------
+Compiler Notes
+--------------
+
+Apparently the linux 'c' compiler allows things like declaring variables well
+into the function, like this -
+
+void myfunction()
+{
+  some_call();
+  int a = something_else();
+}
+
+Microsoft's 'c' compiler does not allow this, so all files are set (via
+project options) to compile as c++ even though they are more (or less?) c.
+
+--
+
+Additionally, there is sparse usage of a C99 capability where arrays can be
+declared on the stack using a non-const size:
+
+void myfunction(int sz)
+{
+  int myarray[sz];
+}
+
+This is not supported on windows and I have had to replace all of this to
+use malloc/free.
+
+--
+
+To import and export functions and variables from a .dll on windows, you use
+special compiler macros. See the notes for ob-api.h, where these macros are
+defined.
+
+--
+
+The microsoft C runtime library ("msvcrt") is sometimes a tricky issue to deal
+with. All projects were built using VC++ Express 2008, which installs and uses
+"MSVCRT90.dll". Both debug and release build configurations are set to link to
+the NON-DEBUG c runtime dll. This can be seen in the project properties under
+
+Configuration Properties/ C/C++ / Code Generation / Runtime Library
+
+It should be set to "Multi-threaded DLL" (rather than "Multi-threaded Debug DLL")
+
+Linking debug builds to the release C runtime library is not the default behavior
+in new projects, so it is worth noting that we use the release C runtime for both
+our debug and release builds.
+
+----
+YAML
+----
+
+I have placed yaml-0.1.2 in the win32/ folder. I did not add the source code to
+the git repo, only the .lib files and the .h files. The only detail worth mentioning
+is that both the debug and release .libs are set to build and link with the
+non-debug "Multi-threaded DLL" C runtime library.
+
+If for some reason in the future these .libs need to be rebuilt, that option
+should be switched in the project/solution.
+
+---------------
+libPlasma tests
+---------------
+
+I've tried to ensure that the tests all pass in as many configurations as
+I can try. This includes
+
+Running tests on osx, using tcp://my_windows_machine/test_pool and windows pool_tcp_server.
+
+Running tests on windows, using tcp://my_osx_machine/test_pool and osx pool_tcp_server.
+
+Running tests on windows, using tcp://localhost/test_pool and pool_tcp_server.
+
+Running tests on windows, without pool_tcp_server.
+
+The shell scripts used to run tests on windows are:
+  libPlasma/tests/make_check_win32.sh
+  libPlasma/tests/make_check_win32_net.sh
+
+
+-----------------------
+libLoam and basic types
+-----------------------
+
+libLoam/ob-coretypes.h
+
+//I guess msc does not have bool by default
+#ifdef _MSC_VER
+  typedef unsigned char bool;
+  #define true (1)
+  #define false(0)
+
+There were no not-a-number defines readily available on windows, so
+I came up with these myself by actually running those equations in code
+(0.0 / 0.0, etc) and examining the bytes that came back from the FPU
+
+static const unt32 OB_NAN_unt32    = 0xFFC00000; //(float bytes that result from 0.f / 0.f)
+static const unt32 OB_POSINF_unt32 = 0x7F800000; //(float bytes that result from 1.f / 0.f)
+static const unt32 OB_NEGINF_unt32 = 0xFF800000; //(float bytes that result from -1.f / 0.f)
+#define OB_NAN32    (*((float32 *)&OB_NAN_unt32))
+#define OB_POSINF32 (*((float32 *)&OB_POSINF_unt32))
+#define OB_NEGINF32 (*((float32 *)&OB_NEGINF_unt32))
+
+
+static const unt64 OB_NAN_unt64    = 0xFFF8000000000000; //(float bytes that result from 0.0 / 0.0)
+static const unt64 OB_POSINF_unt64 = 0x7FF0000000000000; //(float bytes that result from 1.0 / 0.0)
+static const unt64 OB_NEGINF_unt64 = 0xFFF0000000000000; //(float bytes that result from -1.0 / 0.0)
+#define OB_NAN64    (*((float64 *)&OB_NAN_unt64))
+#define OB_POSINF64 (*((float64 *)&OB_POSINF_unt64))
+#define OB_NEGINF64 (*((float64 *)&OB_NEGINF_unt64))
+
+#define OB_NAN      OB_NAN32
+#define OB_POSINF   OB_POSINF32
+#define OB_NEGINF   OB_NEGINF32
+
+I use the 32-bit version of +/- infinity and nan because the MS compiler
+complained about some test cases (in test-slaw-io) about casting OB_POSINF to
+a float32. I have tested casting 32-bit +/- infinity and nan to 64-bit and
+it works fine without compiler complaints, so I decided to use the 32-bit versions
+for the OB_NAN, OB_POSINF, and OB_NEGINF macros.
+
+---------
+ob-api.h
+---------
+
+The libPlasma core is compiled into a single dynamic library, libPlasmaWin32.dll.
+
+Exporting symbols from a .dll is done explicitly like this -
+
+__declspec(dllexport) void myfunction()
+
+
+Importing symbols is done like this -
+
+__declspec(dllimport) void myfunction()
+
+
+I've created macros that allow the libPlasma header files to correctly import
+or export symbols depending on whether you are building the .dll, or
+building an application that links into the .dll. The macros are defined in
+libLoam/ob-api.h
+
+Here are the contents of ob-api.h -
+
+#ifdef _MSC_VER
+
+#ifdef OB_API_EXPORTS
+//definition for windows import/export library stuff
+#define OB_API __declspec(dllexport)
+#elif defined OB_API_IMPORTS
+#define OB_API __declspec(dllimport)
+#else
+#define OB_API
+#endif
+
+#else
+//non-windows definition
+#define OB_API
+
+#endif
+
+When building the libPlasma .dll, the project globally defines OB_API_EXPORTS.
+
+When building the applications that use the .dll (the p-* applications,
+tests, and pool_tcp_server), the project globally defines OB_API_IMPORTS.
+
+Spread throughout the libPlasma header files, you'll see things like this
+(from slaw.h)
+
+OB_API slaw slaw_cons_ff (slaw s1, slaw s2);
+OB_API slaw slaw_cons (pslaw s1, pslaw s2);
+OB_API slaw slaw_cons_kf (pslaw car, slaw cdr);
+
+When these headers are compiled, the appropriate import or export macro is
+inserted.
+
+It is likely that more function definitions will require OB_API, so keep
+this in mind for future development if linker errors are encountered.
+
+----------------------------
+libLoam/ob-sys.h and
+libLoam/win32/ob-sys-win32.h
+-------------------------=--
+
+Prior to porting libPlasma, you would find this at the top of most of the .c
+files -
+
+#include <sys/select.h>
+#include <sys/errno.h>
+#include <sys/other_linux_and_osx_headers.h>
+
+I've tried to move all #includes of platform-specific headers into a single
+file, libLoam/ob-sys.h . By including this file, you will (in theory) get all
+of the platform-specific headers required to compile your application. In
+reality, so far only the platform-specific headers required to build libPlasma
+are present in ob-sys.h, so going forward there will probably be many more
+additions to ob-sys.h
+
+ob-sys-win32.h contains #includes of the windows platform headers, but in
+addition contains definitions for the windows implementation of a few
+pieces of linux / osx, notably -
+
+getopt()
+  This is required by all of the p-* commands. It is implemented using free
+  source code found online
+
+fork()
+  This is required by many of the tests, and was required by pool_tcp_server
+  before I changed it to use threads on Windows. Currently fork() issues an
+  error and returns -1
+
+gettimeofday()
+usleep()
+sleep()
+  I borrowed these implementations from libPlasma-old/plasma_platform_independence.c
+
+ob-sys-win32.h also contains definitions for a few helper functions, notably -
+
+prepare_windows_handle_name()
+  When naming windows syncronization objects, we are often mirroring the names
+of files in the file system. Window sync objects can't have : or / or \\ in their
+name, so this function just replaces the non-alphanumeric characters with _.
+
+winsock_init()
+winsock_shutdown()
+  These initialize and shut down the windows socket communication dll - these
+are required steps for any application that want to use sockets. The plasma
+library automatically ensures that winsock is running whenever pool hoses are
+are active, or whenever pools are created and disposed, so unless you are
+making socket connections outside of the pools api, you should not need to
+call these directly. Currently winsock_init() initializes winsock 2.2. There
+may be cause to use version 2.0 when integrating with Vicon systems, but it
+is not known at the time of this writing whether that will be necessary.
+
+--------------------
+plasma-diagnostics.h
+--------------------
+  error_report
+  error_exit
+  error_abort
+  error_crash
+  drintf
+
+  all used (args...) which VC++ did not like, so those macros now look like this:
+
+old way - #define dprintf(args...) { if (dprintf_debug) __error_report (0, __FILE__, __LINE__ , ## args); }
+new way - #define dprintf(...) { if (dprintf_debug) __error_report (0, __FILE__, __LINE__ , __VA_ARGS__); }
+
+---------
+protein.c
+---------
+  Compiler didn't like instantiation of null protein,
+  changed to:
+
+  static const _protein_chunk _nullProteinChunk = {{0LL,0LL}};//{.a8=0LL, .b8=0LL}};
+
+-----------------
+pool_tcp_server.c
+-----------------
+
+The Windows pool server does not fork-off child processes, it loops waiting for
+new connections. When a new connection is accepted, it spawns a thread to handle
+the connection and passes the socket handle into the thread. When that connection
+transaction completes, the socket is shutdown and closed, and the thread exits.
+
+connection_thread_entry()
+  This is the function where the spawned threads begin execution
+
+wait_for_connections()
+  This is the function where the main thread loops over and over, waiting for
+connections and spawning threads.
+
+---------------------
+p-*.c (p-create, etc)
+---------------------
+
+These were all ported without substantial changes except to #include <ob-sys.h>
+rather than the various platform-specific headers.
+
+-------------
+slaw-string.c
+-------------
+
+slaw_string_vformat()
+  This function uses va_copy, which is not present on microsoft's c compiler.
+  In its place I have used the = operator to copy one va_args to another. It is
+  unclear whether this is safe, however since the tests are all passing, the
+  assumption is that it is indeed safe.
+
+#ifdef _MSC_VER
+
+#pragma message("slaw-string.c: replacing va_copy with =, is this ok?")
+  atmp = ap;
+
+#else
+
+   va_copy (atmp, ap);
+
+#endif
+
+-----------
+pool_impl.h
+-----------
+
+pool_hose_struct.sem_id -
+
+The Windows implementation of sem_ops.c uses mutexes, not semaphores.
+(refer to the notes for sem_ops.c for why I used mutexes). Linux semaphores
+are allocated as arrays of semaphores, so only a single sem_id is needed
+in the pool hose to identify a whole array of semaphores. Windows can't do
+this, we have to store an array of mutex handles. So the pool hose structure
+was modified like this -
+
+#ifdef _MSC_VER
+  /**
+   * Windows uses mutexes for lock operations, one mutex per type of
+   * lock required by the pool hose (see #defines at the top of this file)
+   */
+  HANDLE     mutex_handles[POOL_SEM_SET_COUNT];
+
+  //this is unused on windows and seems to not be used on linux/osx,
+  //except to read/write it to the pool config file. windows initializes
+  //this to -1 and does nothing else with it.
+  int32      sem_key;
+#else
+  /**
+   * Key and id for semaphore-based lock operations.
+   */
+  key_t      sem_key;
+  int        sem_id;
+#endif
+
+In order to declare that array of mutexes, I had to move the declaration of
+POOL_SEM_SET_COUNT from sem_ops.c to the top of pool_impl.h.
+
+//these #defines were moved from sem_ops.c
+#define POOL_SEM_DEPOSIT_LOCK_IDX      0
+#define POOL_SEM_NOTIFICATION_LOCK_IDX 1
+#define POOL_SEM_SET_COUNT             2
+
+
+--
+
+pool_hose_struct.notify_fd -
+
+The pool hose structure on linux has a member 'notify_fd'. On windows, I've
+renamed this to avoid confusion, because it is not a socket or file descriptor,
+but rather a handle to an event object -
+
+#ifdef _MSC_VER
+  /**
+   * this is the handle of the event we should wait on if we want
+   * notification for a deposit in this pool.  For local pools, this
+   * is the fifo specified by fifo_path. Unlike linux network pools,
+   * it is NOT possible on windows to wait on the network socket via
+   * notify_fd. This is something that will be addressed in the future.
+   */
+  HANDLE     notify_event_handle;
+#else
+  /**
+   * fd of the socket we should wait on if we want notification for a
+   * deposit in this pool.  For local pools, this is the fifo
+   * specified by fifo_path.  For network pools, this is the network
+   * socket.
+   */
+  int        notify_fd;
+#endif
+
+Read more about notify_event_handle below in the notes for fifo_ops_win32.c
+
+-----------------------------
+fifo_ops.c / fifo_ops_win32.c
+-----------------------------
+
+I created a new file fifo_ops_win32.c for windows. fifo_ops.c is not used
+on windows. If substantial changes are made or features added to fifo_ops.c,
+those changes will probably need to propagate over to fifo_ops_win32.c.
+
+The intended behavior of fifo_ops.c is to allow a pool hose to wait for (and
+be awoken by) pool deposits. The presumed logic behind using fifos on linux
+is that they can be select()ed along with sockets. On windows, select() works
+with nothing except sockets. So pool notification waits and wakeups are done
+instead using manual reset events.
+
+  //creates a manual-reset event
+  HANDLE new_event =
+    CreateEvent(
+      NULL, //no extra security attributes
+      TRUE, //manual-reset
+      false, //initially non-signaled
+      new_name);
+
+  //waits for someone to signal that event.
+  WaitForSingleObject(new_event, INVINITE);
+
+  //The event will be signaled from some other thread with a call to SetEvent.
+  //After waking up from WaitForSingleObject, you can wait again on
+  //that object by first calling ResetEvent(), then WaitForSingleObject again
+  //a second time.
+
+
+pool_fifo_multi_add_awaiter()
+  A unique fifo file name is generated (randomly), a similarly named windows event
+  object is created, and a file is placed in the notification folder. The name of
+  the event object mirrors the name of the file so that when wake_awaiters() is
+  called, the filename can be used to discover the event object in the windows
+  event namespace.
+
+  The new event object handle is stored in the notify_event_handle member of
+  pool_hose_struct.
+
+
+pool_fifo_wake_awaiters()
+  When someone wants to wake the waiters, the folder is scanned, the file names
+  are used to find the corresponding event objects, and they are signaled with a
+  call to SetEvent(). The files in the folder are all unlinked.
+
+
+pool_fifo_await_next_single()
+  WaitForMultipleObjects is called with the notify_event_handle and (if it != 0)
+  the hose wakeup_event_handle. Handling wake-up from the notification event will
+  try to read the next protein, handling wake-up from the wakeup_event will return
+  POOL_AWAIT_WOKEN.
+
+  The linux code for this function contains a while() loop, whose intended behavior
+  is unclear to me. When it loops and when it doesn't is not clear. Mine does loop
+  in some(?) cases. It passes all the tests, but this may need future examination.
+
+---------------------------
+sem_ops.c / sem_ops_win32.c
+---------------------------
+
+I created a new file sem_ops_win32.c on windows, sem_ops.c is not used. If
+substantial changes are made or features added to sem_ops.c, those changes
+will probably need to propagate over to sem_ops_win32.c.
+
+I moveed several #defines from sem_ops.c to the top of pool_impl.h -
+
+//these #defines are moved to pool_impl.h
+//#define POOL_SEM_DEPOSIT_LOCK_IDX      0
+//#define POOL_SEM_NOTIFICATION_LOCK_IDX 1
+//#define POOL_SEM_SET_COUNT             2
+
+On windows, "semaphore" locks are done with mutexes. The semaphores on linux
+are being used with a count of 1, so there's no actual need to use semaphores.
+In fact, it may make more sense to refer to sem_ops as mutex_ops since the
+purpose is to obtain a mutually exclusive lock over a single shared resource
+(either the pool itself, or the notification folder).
+
+On windows, if a thread exits or crashes while it owns a mutex, it will
+auto-release ownership of the mutex. This achieves behavior consistent with
+what happens on linux using the SEM_UNDO option with semaphores. Though this
+can prevent deadlocks it does not guarantee that the state of the pool or
+notification folder is valid after a mutex is abandoned, so care should be
+taken when mutex ownership is regained after abandonment.
+
+currently this is handled by issuing a warning in pool_sem_lock() -
+
+  switch (result)
+  {
+  case WAIT_OBJECT_0:
+    //we have mutex ownership
+    return OB_OK;
+
+  case WAIT_ABANDONED_0:
+    //we have the mutex but it is because someone abandoned it
+    error_report ("pool_sem_lock gained ownership of an abandoned mutex, "
+      "state of notification/pool folder is dubious.");
+    return OB_OK;
+
+  default:
+    error_report ("unhandled WaitForSingleObject error in pool_sem_lock - %d", result);
+    break;
+  }
+
+
+-----------
+pool_mmap.c
+-----------
+
+I had to change the definition of the pool_mmap_data struct to track two
+handles for the mmap'd file -
+
+#ifdef _MSC_VER
+  HANDLE     file;
+  HANDLE     file_mapping_object;
+#else
+  FILE      *file;
+#endif
+
+
+pool_mmap_create()
+  The too_big_pool test was actually crashing the windows server because
+  _chsize() was unable to return failure - instead, it crashed. So I added a
+  #define and a check in pool_mmap_create to return a failure if the size is
+  bigger than POOL_MMAP_MAX_SIZE. I have not checked to see if _chsize()
+  crashes attempting to create a 32 gig pool but its probably a decent idea
+  for the future to at least confirm that there is enough available free disk
+  space to contain the pool before trying to create it.
+
+  #define POOL_MMAP_MAX_SIZE (34359738368LL) //32 gigabytes
+
+
+pool_mmap_create_file()
+  First, the file is created using older io.h routines and resized using the
+  _chsize() function. (ftruncate() does not exist on windows) After _chsize() is
+  successful, the file is closed.
+
+  Then the file is re-opened using
+    CreateFile(
+      path,
+      GENERIC_READ | GENERIC_WRITE,
+      FILE_SHARE_READ | FILE_SHARE_WRITE,
+      NULL,
+      OPEN_EXISTING,
+      0,
+      0);
+
+  When this succeeds, the file handle is stored to the 'file' member of
+  pool_mmap_data.
+
+
+pool_mmap_open_file()
+  The mmap file is opened just as it was in create_file, except not created
+  first. Imagine that!
+
+
+pool_mmapify()
+  Using the 'file' from the mmap_data struct, a file mapping object is created :
+
+  HANDLE fileMapping = CreateFileMapping(d->file, 0, PAGE_READWRITE, 0, 0, 0);
+
+  Then, if that worked, a pointer to the memory is acquired :
+
+  byte *mmem = (byte *)MapViewOfFile(fileMapping, FILE_MAP_ALL_ACCESS, 0, 0, d->size);
+
+  pool_mmap_data->file_mapping_object = fileMapping;
+  pool_mmap_data->mem = mmem;
+
+
+pool_mmap_participate_cleanup()
+  The memory pointer is released with a call to UnmapViewOfFile(d->mem);
+  The file mapping object is released with a call to CloseHandle(d->file_mapping_object);
+  Then the file itself is closed with a call to CloseHandle(d->file);
+
+
+pool_mmap_load_methods()
+  I surrounded this with #ifdef __cplusplus extern "C" {} because windows is
+  compiling all of the .c source code as C++. This was preventing GetProcAddress
+  from finding pool_mmap_load_methods because it had been linked with C++ name
+  mangling. With extern "C" it is linked correctly and find-able by
+  pool_load_methods() in pool.c.
+
+------
+pool.c
+------
+
+pool_config_lock()
+  This is done using mutexes rather than file locking. Windows mutexes do not
+  have the race condition problem that semaphores have on linux, where it is
+  tricky to ensure that the first lock creates the semaphore, and subsequent
+  locks only re-open it. Mutexes on windows can be created or reopened using
+  the same call, CreateMutex.
+
+  The lock taken here only works as long as other code is well behaved. It is
+  possible, for instance, to navigate into the ob/pools folder while it is
+  "locked", and delete things manually.
+
+
+pool_list()
+  This was re-written as pool_list_slaw(). I implemented a version for windows
+  and it seems to works well. Pat wrote the linux / osx version.
+
+pool_load_methods()
+  This opens the libPlasmaWin32.dll and uses GetProcAddress to find the
+  pool_*_load_methods function. If that fails, it searches in the address
+  space of the calling program. If that fails, no other searches are
+  performed.
+
+
+pool_hose_enable_wakeup()
+  Windows uses pool_hose_struct.wakeup_event_handle to wait and wakeup. It is
+  created here as an auto-reset event, which mean a single thread can call
+  WaitForSingle/MultipleObject time after time without needing to call
+  ResetEvent() to restore the event to its 'non-signaled' state. Auto-reset
+  events are signaled and then become non-signaled immediately after 1
+  thread is woken from a wait on the event.
+
+pool_hose_wakeup()
+  This just calls SetEvent on wakeup_event_handle
+
+------------
+pool_multi.h
+------------
+
+Unix / OSX uses a fd_set of descriptors that are built up from the notify_fd
+and net->connfd's of various pool hoses. Windows has to do this using HANDLES
+to notification event objects. So there is a new structure added to
+pool_multi.h
+
+struct pool_gang_wait_list_struct {
+  HANDLE wait_handle;
+  pool_gang_wait_list_struct *next;
+};
+
+pool_gang_struct includes this structure rather than the wait_fds fd_set
+
+struct pool_gang_struct {
+  /**
+   * The leader is a pointer to the first gang member in the list.
+   */
+  pool_gang_member leader;
+  /**
+   * last_checked keeps a pointer to the last pool we found a protein
+   * in so that we can fairly distribute reads to the pools.
+   */
+  pool_gang_member last_checked;
+
+#ifdef _MSC_VER
+  /**
+   * on Win32 we put together a list of HANDLES which are from either
+   * a DuplicateHandle(ph->notify_event_handle) or a WSACreateEvent/WSAEventSelect
+   */
+  pool_gang_wait_list_struct *wait_list;
+#else
+  /**
+   * wait_fds is a cached fd_set of all the notification fds
+   * associated with the pool hoses in the gang.  select() operates
+   * on a copy of this fd_set.
+   */
+  fd_set wait_fds;
+  /**
+   * maxfd is the largest file descriptor in our gang, for select().
+   */
+  int maxfd;
+#endif
+};
+
+------------
+pool_multi.c
+------------
+
+There are several new functions to assist with manipulation of the pool gang
+wait list -
+
+  //simple recursive list count
+  int pool_gang_wait_list_count(pool_gang_wait_list_struct *l)
+
+  //simple recursive list free
+  void pool_gang_wait_list_free(pool_gang_wait_list_struct *l)
+
+  //assuming wait_list_count has been used to allocate a properly sized out_array,
+  //this will fill in the array with the contents of the list. this array structure
+  //is required for the call to WaitForMultipleObjects
+  void pool_gang_wait_list_arrayify(pool_gang_wait_list_struct *l, HANDLE *out_array)
+
+pool_multi_add_awaiter()
+  inline #ifdef _MSC_VER
+  allocates and adds an entry onto the gang's wait list
+
+pool_multi_prepare_await()
+  inline #ifdef _MSC_VER
+  initializes the gang's wait list, freeing the previous if needed
+
+pool_multi_select()
+  inline #ifdef _MSC_VER
+  uses the above helper functions to count the # of entries in the wait list,
+  allocates an array and fills that array with all of the handles, then calls
+  WaitForMultipleObjects
+
+pool_init_multi_await()
+  inline #ifdef _MSC_VER
+  call to mkdir takes only 1 argument on windows
+
+pool_destroy_multi_await()
+  total function replacement #ifdef _MSC_VER
+  finds all the files in the notification folder and deletes them, then removes
+  the notification folder
+
+-----------
+pool_net.c
+-----------
+
+pool_net_multi_add_awaiter()
+  Using net->connfd as the socket source, we create and store a waitable socket
+  event into notify_event_handle:
+
+  HANDLE socket_event = WSACreateEvent();
+  ph->notify_event_handle = WSAEventSelect(ph->net->connfd, socket_event, FD_READ | FD_CLOSE)
+
+  This allows WaitForSingle/MultipleObject to wake-up due to socket activity.
+  It should be noted that this places the socket into non-blocking mode, so we
+  have to restore it to blocking mode in the call to remove_awaiter below
+
+pool_net_multi_remove_awaiter()
+  //this restores the socket to blocking mode and
+  //dissociates the notify_event_handle with the socket
+  WSAEventSelect(ph->net->connfd, 0, 0);
+
+  WSACloseEvent(ph->notify_event_handle);
+  ph->notify_event_handle = 0;
+
+--
+
+pool_net_server_await()
+  This function wants to wait on two things at once - pool deposits and socket
+activity. So, a windows event is created to represent socket activity as follows:
+
+  //create an event that allows us to WaitForMultipleObjects using the socket
+  WSAEVENT socketEvent = WSACreateEvent();
+
+  //attach the event to the socket such that when we wait, we will be woke up when
+  //there is data to read, or when the socket closes
+  int ev_res = WSAEventSelect(net->connfd, socketEvent, FD_READ | FD_CLOSE);
+
+The pool deposit notification scheme is already based on windows events, so no
+extra step is needed other than to combine the socketEvent and notify_event_handle
+into an array and call WaitForMultipleObjects -
+
+  HANDLE waitHandles[2] = {socketEvent, (HANDLE)ph->notify_event_handle};
+
+  DWORD wait_milliseconds = (DWORD) (1000.0 * timeout);
+  if (wait_milliseconds==0)
+    wait_milliseconds = INFINITE;
+
+  DWORD wait_res = WaitForMultipleObjects(2, waitHandles, false, wait_milliseconds);
+
+
+The linux code for this function contains a while() loop, whose intended
+behavior is unclear to me. When it loops and when it doesn't is not clear.
+My current solution (to have no loop) is passing all the tests but will likely
+require future examination.
+
+
+----------
+pool_tcp.c
+----------
+
+pool_tcp_send_nbytes and pool_tcp_recv_nbytes()
+  The error handling for send and recv on Windows is substantially different
+  from linux, so I wrote the windows versions of these as seperate functions
+  (rather than sharing the linux functions with embedded #ifdefs).
+
+It was also necessary to write a short close() function at the top to handle
+closing of sockets properly on windows:
+
+//in this file (pool_tcp.c), close is used to close SOCKET descriptors
+static int close(SOCKET sock)
+{
+  shutdown(sock, SD_RECEIVE | SD_SEND);
+  return closesocket(sock);
+}
+
+I also had to insert numerous calls to winsock_init() and winsock_shutdown()
+to ensure that the windows sockets library is loaded when tcp connections are
+made. In some cases this results in the library being loaded and unloaded
+several times during the run of an application. So far the tests do not have
+any problems with this, but in the future we may want to simply never unload
+the library, as I am fairly sure that it is unloaded automatically when the
+process exits.
+
+--
+
+pool_tcp_load_methods()
+
+  I surrounded this with #ifdef __cplusplus extern "C" {} because windows is
+  compiling all of the .c source code as C++. This was preventing GetProcAddress
+  from finding pool_mmap_load_methods because it had been linked with C++ name
+  mangling. With extern "C" it is linked correctly and find-able by
+  pool_load_methods() in pool.c.
+
+-----------
+pool_cmd.c
+-----------
+
+There is a lot of code here used on linux to check for leaked file descriptors.
+I have not found a way to do this yet on Windows so all of that stuff is
+#ifdef'd out.
+
+check_for_leaked_file_descriptors_scoped()
+  (on windows) this just calls the mainish_function without checking for leaks.
+  During compilation it issues a pragma warning to inform the user of the incomplete
+  implementation.
+
+-------------
+SLAW
+-------------
+
+-----------
+slaw-yaml.c
+-----------
+
+There was substantial use of the c99 feature where you can declare
+arrays on the stack whose size comes from a dynamic integer. I rewrote
+these functions to use malloc/free:
+  sly_handle_nonstd_protein()
+  sly_handle_rude_data()
+  sly_parse()
+
+There were a few errors due to using incorrect types of enums,
+I fixed them with pat's help, hopefully those changes don't break
+anything -
+
+sly_begin_map()
+  YAML_BLOCK_SQUENCE_STYLE replaced with YAML_BLOCK_MAPPING_STYLE
+
+sly_handle_string()
+  yaml_squence_style_t style = YAML_PLAIN_SCALAR_STYLE replaced with
+  yaml_scalar_style_t style = YAML_PLAIN_SCALAR_STYLE
+
+--
+
+  Had to replace the c99 fpclassify with windows _fpclass
+
+  sly_handle_float()
+    switch (_fpclass (val))
+    {
+    case _FPCLASS_SNAN:
+    case _FPCLASS_QNAN:
+      snprintf (buf, sizeof(buf), ".NaN");
+      break;
+    case _FPCLASS_PINF:
+      snprintf (buf, sizeof(buf), "+.Inf");
+      break;
+    case _FPCLASS_NINF:
+      snprintf (buf, sizeof(buf), "-.Inf");
+      break;
+    default:
+      snprintf (buf, sizeof (buf), "%.*g", sigdigs, val);
+      if (!info->tag_numbers &&
+          strchr (buf, '.') == NULL &&
+          strchr (buf, 'e') == NULL &&
+          strlen (buf) + 3 < sizeof (buf))
+        strcat (buf, ".0");
+      break;
+    }
+
+-------------
+TESTS
+-------------
+
+--------------
+ilk-begotten.c
+--------------
+  This uses jrand48 which does not exist on windows, I was able to find
+  this implementation online which seems to work -
+
+  long jrand48(unsigned short xsubi[3])
+  {
+    unt64 x;
+
+    x =  (unt64)(unt16)xsubi[0] +
+        ((unt64)(unt16)xsubi[1] << 16) +
+        ((unt64)(unt16)xsubi[2] << 32);
+
+    x = (0x5deece66dULL * x) + 0xb;
+
+    xsubi[0] = (unsigned short)(unt16)x;
+    xsubi[1] = (unsigned short)(unt16)(x >> 16);
+    xsubi[2] = (unsigned short)(unt16)(x >> 32);
+
+    return (long)(int32)(x >> 16);
+  }
+
+-----------
+pad_tests.c
+-----------
+  use of random() in randomize_mem() was replaced with rand()
+
+--------------
+listcat_test.c
+--------------
+  #included "win32/pthread_win32.h"
+
+  main()
+    fixed up c99 stack array declarations to use malloc/free
+
+-----------
+seek_test.c
+-----------
+  There was a hose left open during the call to dispose near the end of the
+  test. I moved the hose withdraw up so that it happens before the dispose. This
+  solved the problem on where seek_test kept leaving test_pool dangling.
+
+-------------
+matrix_test.c
+-------------
+  This runs on Windows using threads rather than forked processes. I had to
+  reorganize the way results are tracked since the linux/osx version was using
+  global variables. Globals work fine with forked processes because each child
+  process gets their own copies of the globals, but with threads the memory is
+  obviously shared so the functions that run the tests store results to some
+  pointer variables (which, on the linux/osx version refer to the globals, but
+  on windows refer to a structure that is setup per-thread to track results).
+
+  Ending the test on linux/osx is done using signals, which have very limited support
+  on Windows. Signals are not applicable here anyway since we are using single-process
+  multiple-threads, rather than many-processes. So ending the test is done by
+  watching the timer at the end of each pass through the reader/depositor loops,
+  and exiting when the goal time is reached.
+
+  The unfortunate design of matrix_test is such that pool reader hoses are often
+  left connected in an await_read when the signal to end the test comes. Those
+  processes are exit()ed in response to the signal, very often leaving hoses
+  connected and not withdraw()n correctly. On windows, the reader threads
+  have to be Terminated to be broken out of the await_read.
+
+  So, the windows main thread keeps track of all the threads in a big list so that it
+  can wait for all of them to complete and examine their results. It includes a
+  call to TerminateThread which will kill a reader thread if it does not return
+  within 10 seconds of reaching the goal time. We assume that if TerminateThread
+  is necessary, it is because the reader is blocked in a call to await_read. This
+  is a valid end case so the test will PASS if this situation is encountered.
+
+  It is likely that the statistics printed at the end of the test on windows will
+  differ a bit from the statistics printed at the end of the test on linux/osx,
+  because of the difference in timekeeping.
+
+  If this test requires further development, my suggestion is to re-write the
+  test on linux/osx to use threads and come up with a single method for timekeeping
+  that is compatible with both platforms. Additionally, the design should account
+  for situations where the reader may end up blocked waiting on a read. Perhaps use
+  a hose wakeup or ensure there's always a read timeout, to avoid the end case where
+  the process or thread has to be killed to break out of the blocked state.
+
+-----------------------------------
+create_noipc_pool.sh / sem_delete.c
+-----------------------------------
+  This test attempts to simulate a reboot scenario where there are pools around but
+  no semaphores established/created. To do this, it creates a pool, then deletes the
+  semaphores, then tries to carry out pool operations.
+
+  On windows it is simply not possible to do this because the function we use for
+  creating/opening a named semaphore/mutex is the same. Attempting to carry
+  out pool operations when the pool semaphore/mutex doesn't exist would actually
+  create a new semaphore/mutex and use it.
+
+  This test is skipped.
+
+---------------
+perf_test.c
+pingpong_test.c
+---------------
+  #included "win32/pthreads_win32.h"
+
+---------------
+various-types.c
+---------------
+  Had to define a few things -
+
+  #define getppid getpid
+  #define random rand
+
+  Had to implement a bogus uname -
+
+  struct utsname
+  {
+    char *sysname;
+    char *nodename;
+    char *release;
+    char *version;
+    char *machine;
+  };
+
+  static int uname(struct utsname *n)
+  {
+    n->sysname = "Microsoft Windows";
+    n->nodename = "BillGatesVille";
+    n->release = "Windows7000";
+    n->version = "7000";
+    n->machine = "x86Monster";
+    return 0;
+  }
+
+-----------
+slabu-map.c
+test-map.c
+-----------
+  added explicit cast to (float) in call to sqrt to resolve compiler ambiguity
+
+-------------
+endian_test.c
+-------------
+  This string was too long for the compiler:
+
+  static const char *plasma = "really long string....."
+
+  So I broke it in half using two sets of "" :
+
+  static const char *plasma = "really long string....." " rest of the string".
+
+  Apparently the limit for the # of chars between "" is around 16380.
+
+--------------------
+doppelganger.c
+fifo_exists.c
+many_creates.c
+participate_create.c
+null_test.c
+seek_test.c
+await_test.c
+wrap_test.c
+--------------------
+  No substantial changes required except to #include "libLoam/ob-sys.h" rather than the
+platform specific includes.
+
+--------------
+test-slaw-io.c
+--------------
+  No mkstemp on windows, #ifdef _MSC_VER + GetTempPath and GetTempFilename
+
+-----------
+pad_tests.c
+-----------
+  #define random rand
+
+----------
+bin2yaml.c
+ins-rep.c
+list-search.c
+map-merge.c
+rude_test.c
+rumpus-room.c
+test-boolean.c
+----------
+  no changes needed

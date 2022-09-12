@@ -1,0 +1,78 @@
+/**
+
+\page glossary Glossary
+
+libPlasma provides a framework for interprocess communication using proteins,
+pools, and slawx. libPlasma also provides a subsystem for strongly-typed but
+flexibly aggregable data representation and transfer.
+
+- \ref oblong::plasma::Protein "Protein" — Proteins are something like data
+  structures, but they are more flexible and divided into two parts: descrips
+  and ingests. Descrips are supposed to be slaw strings, and ingests are
+  supposed to be key-value pairs, although this is not specifically enforced.
+
+- \ref oblong::plasma::Pool "Pool" — A pool is a generalization of the
+  end-to-end communications channel, with many points of contact. Although
+  conceptually infinite, pools are implemented as ring buffers—pools look a
+  lot like circular queues of proteins, linearly ordered by time deposited.
+
+- \ref oblong::plasma::Slaw "Slaw" — Slawx (plural for "slaw") are the lowest
+  level of libPlasma. The term \e slaw encapsulates the idea of a
+  self-describing, highly structured, strongly typed (but arbitrarily
+  composed) data units, with the ability to store multiple types of data. A
+  slaw can be an unsigned 64-bit integer, a complex number, a vector, a
+  string, or a list. A more complete list of types implemented as slawx can be
+  found in ob-types.h and slaw-numeric-ilk-rumpus.h.
+  - descrip — a linear list of tags (strings) that label the parts of the data
+  payload.
+  - ingest — the data payload itself, which can be an 8-bit number, or the
+  contents of <em> Moby Dick</em>, or a frame of video.
+
+- \ref oblong::plasma::Hose "Hose" — A hose provides a read-write connection
+  to a pool. Hoses are AnkleObjects, and are therefore generally used as
+  pointers, managed by ObRef, ObTrove and friends.
+  - participate — To talk to a pool, connect a hose to it via
+    pool_participate() (or pool_participate_creatingly()).
+  - withdraw — To close your connection to a pool, disconnect via
+    pool_withdraw().
+  - deposit — To deposit a protein into a pool, use pool_deposit().
+  - clone — To duplicate a connection to a pool, clone via pool_hose_clone().
+
+\section loam_glossary libLoam
+
+libLoam: Oblong's \c c and \c c++ libraries containing basic type definitions
+(defined in the \c c portion of the library) and higher-level object
+definitions (defined in the \c c++ portion).
+
+- \ref oblong::loam::AnkleObject "AnkleObject" — the base of the g-speak
+  platform object hierarchy. AnkleObjects know how to be memory managed (e.g.,
+  reference counted, deleted, etc.).
+- \ref oblong::loam::GeomSlab "GeomSlab" — a collection of useful,
+  information-rich geometry intersection and alignment tests.
+- \ref oblong::loam::FatherTime "FatherTime" — a simple kind of stateful clock
+  with a settable hand and adjustable run speed.
+- \ref oblong::loam::ObRef "ObRef" — our memory-managed reference type. This
+  construct shares concepts with smart pointers.
+- \ref oblong::loam::ObTrove "ObTrove" — our list type. ObTrove can be
+  appended to, prepended to, iterate over itself, insert elements, swap
+  elements, and so forth.
+- \ref oblong::loam::ObCons "ObCons" — our cons types are key value pairs
+  assembled into maps.
+- \ref oblong::loam::ObMap "ObMap" — conditioned to have one of three behavior
+  types: they can guarantee unique keys privileging the first key, they can
+  guarantee keys privileging the most recent key, or the map is used as an
+  ordered list of key value pairs that allow for key duplication.
+- \ref oblong::loam::ObCrawl "ObCrawl" — our take on iterators. The ObCrawl is
+  a single iteration object that includes a \e begin and \e end fencepost as
+  an implementation, but also allows composition that iterators with a
+  specific begin and end cannot normally allow.
+  - chain — snaps two crawls together
+  - retro — turns an ObCrawl around back to front
+  - zip — takes an input of between 2 and 21 ObCrawls and meshes them
+  together.
+- \ref oblong::loam::ObRetort "ObRetort" — our information-rich error
+  signaling mechanism.
+- \ref oblong::loam::Str "Str" — our completely unicode-compliant string
+  class.
+
+*/

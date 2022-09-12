@@ -1,0 +1,7 @@
+This is https://github.com/google/googletest/commit/aa148eb2b7f70ede0eb10de34b6254826bfb34f4
+(1.8.0-31) plus a fix for a Visual Studio 2015 problem,
+https://github.com/google/googletest/issues/1033
+fused together as described by
+https://github.com/google/googletest/blob/master/googletest/docs/AdvancedGuide.md#fusing-google-test-source-files
+
+The only change needed to the CMakeLists.txt was to replace src with . wherever it occurred.

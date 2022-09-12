@@ -1,0 +1,107 @@
+# Leak Sanitizer suppressions
+# In alphabetical order
+# With comment showing origin
+
+# Font cache; will be emptied by GlyphoString::RecycleGLResources
+leak:LoadOrRecallGlyphoFont
+
+# Format cache, see  oblong::media::GStreamerVideoFormat::Fetch
+leak:_ZN6oblong5media20GStreamerVideoFormat5FetchE14GstVideoFormat
+
+# VFImageRecorderTest
+# Indirect leak of 12606 byte(s) in 90 object(s) allocated from:
+#     #0 in __interceptor_calloc (/usr/lib/x86_64-linux-gnu/libasan.so.2+0x9879a)
+#     #1  (/usr/lib/x86_64-linux-gnu/dri/i965_dri.so+0x2c1581)
+# libgl1-mesa-dri: 13.0.4-1ubuntu1~16.04~0.1
+leak:i965_dri.so
+leak:radeonsi_dri.so
+
+# ExposingFixture.DefaultMaxTexDim_IsAtLeast_8192
+# 215: Direct leak of 120 byte(s) in 1 object(s) allocated from:
+#     #0 in __interceptor_malloc (/usr/lib/x86_64-linux-gnu/libasan.so.4+0xdeb50)
+#     #1  (/usr/lib/x86_64-linux-gnu/libGL.so.1+0x88b56)
+leak:libGL.so.1
+
+# ExposingFixture, on rbb-ubu1804-2 with GeForce GTX 1050 Ti
+# ==40186==ERROR: LeakSanitizer: detected memory leaks
+# Direct leak of 1682274 byte(s) in 98 object(s) allocated from:
+#     #0 0x7f802a4d1b50 in __interceptor_malloc (/usr/lib/x86_64-linux-gnu/libasan.so.4+0xdeb50)
+#     #1 0x7f801634ba18  (/usr/lib/x86_64-linux-gnu/libGLX_nvidia.so.0+0xb1a18)
+leak:libGLX_nvidia.so.0
+
+# TextureTreadmillTest
+# Direct leak of 36 byte(s) in 1 object(s) allocated from:
+#     #0 0x7fc4a0e04602 in malloc (/usr/lib/x86_64-linux-gnu/libasan.so.2+0x98602)
+#     #1 0x7fc49b20314b  (/usr/lib/x86_64-linux-gnu/libxcb.so.1+0xc14b)
+# libxcb1: 1.11.1-1ubuntu1
+leak:libxcb.so.1
+
+# FontTest
+# FIXME: is this a real leak?
+# Indirect leak of 1744 byte(s) in 12 object(s) allocated from:
+#     #0 in malloc (/usr/lib/x86_64-linux-gnu/libasan.so.2+0x98602)
+#     #1 in icu_55::UnicodeString::allocate(int) (/usr/lib/x86_64-linux-gnu/libicuuc.so.55+0xa4d3a)
+leak:libicuuc.so.55
+
+# Ubuntu 18.04 version of above
+# 208:     #1 0x7f21feadb486 in icu_60::UnicodeString::allocate(int) (/usr/lib/x86_64-linux-gnu/libicuuc.so.60+0xb9486)
+leak:libicuuc.so.60
+
+# TextLayoutTests
+# Direct leak of 256 byte(s) in 1 object(s) allocated from:
+#     #0 0x7fe18ca07602 in malloc (/usr/lib/x86_64-linux-gnu/libasan.so.2+0x98602)
+#     #1 0x7fe1829a30b9  (/usr/lib/x86_64-linux-gnu/libfontconfig.so.1+0x1d0b9)
+# 
+# Indirect leak of 32 byte(s) in 1 object(s) allocated from:
+#     #0 0x7fe18ca0779a in __interceptor_calloc (/usr/lib/x86_64-linux-gnu/libasan.so.2+0x9879a)
+#     #1 0x7fe1829a37c8  (/usr/lib/x86_64-linux-gnu/libfontconfig.so.1+0x1d7c8)
+leak:libfontconfig.so.1
+
+# https://bugs.oblong.com/show_bug.cgi?id=18473 libGanglia/ElementaryTest's Ganglia::OneFineSpurning
+# Suppress for now
+leak:Ganglia_OneFineSpurning_Test
+
+# https://bugs.oblong.com/show_bug.cgi?id=18472 VidQuadText
+# Suppress for now
+leak:VidQuadTest_VidQuadBasic_Test
+leak:appavenque_caps_notify
+# gaaaaaah
+leak:g_malloc
+
+# https://bugs.oblong.com/show_bug.cgi?id=18483
+leak:TexQuadTest
+
+# CompressedTexTests
+# Very annoying mystery leak.  Shows as
+# Indirect leak of 1439 byte(s) in 49 object(s) allocated from:
+#     #0 0x7f034c705602 in malloc (/usr/lib/x86_64-linux-gnu/libasan.so.2+0x98602)
+#     #1 0x7f034aad3489 in __strdup (/lib/x86_64-linux-gnu/libc.so.6+0x8b489)
+# That's all the stack it shows.  Even adding a suppression on 'main'
+# doesn't keep them from being reported.
+leak:__strdup
+
+# FlatThingTests failed on ubuntu 18.04:
+# Direct leak of 452 byte(s) in 2 object(s) allocated from:
+#     #0 0x7fbd1d78cb50 in __interceptor_malloc (/usr/lib/x86_64-linux-gnu/libasan.so.4+0xdeb50)
+#     #1 0x7fbd1a9d0dd6  (/usr/lib/x86_64-linux-gnu/libXrandr.so.2+0x5dd6)
+# Also hit other projects, e.g. https://bugzilla.mozilla.org/show_bug.cgi?format=default&id=1028382
+
+leak:libXrandr.so.2
+
+# FlatThingTests failed badly on ubuntu 19.10:
+# 240: Indirect leak of 7520 byte(s) in 60 object(s) allocated from:
+# 240:     #0 0x7f81f3e0af1e in __interceptor_realloc (/lib/x86_64-linux-gnu/libasan.so.5+0x10df1e)
+# 240:     #1 0x7f81e89f628f  (/lib/x86_64-linux-gnu/libnvidia-glcore.so.435.21+0xe3928f)
+# Nvidia:
+leak:libnvidia-glcore.so.*
+# Intel:
+leak:libGLX_mesa.so.0
+# Hades/AMD:
+leak:libdrm_amdgpu.so.1
+
+# libSplotch tests and most libNoodoo2 tests leaked badly on ubuntu 20.04 on Skull:
+leak:iris_dri.so
+
+# libGanglia/tests/ElementaryTest: Leak in AssuredSpurnPile
+# https://gitlab.oblong.com/platform/yovo/issues/354
+leak:AssuredSpurnPile

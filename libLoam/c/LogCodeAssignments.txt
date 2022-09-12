@@ -1,0 +1,9 @@
+0x10000000 libLoam/c/ob-dirs.c
+0x10010000 libLoam/c/ob-retorts.c
+0x10020000 libLoam/c/ob-util.c
+0x10030000 libLoam/c/win32/ob-sys-win32.c
+0x10040000 libLoam/c/win32/ob-pthread-win32.h
+0x10050000 libLoam/c/ob-rand.c
+0x10060000 libLoam/c/ob-log.c
+0x10070000 libLoam/c/ob-time.c
+0x10080000 libLoam/c/ob-vers.c

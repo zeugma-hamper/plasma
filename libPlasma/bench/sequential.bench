@@ -1,0 +1,25 @@
+#!/bin/bash
+# Call as ./sequential.sh <pool_name> <batches> <bsize> <psize> <read-mode>
+
+. @builddir@/benchmarks.sh
+
+pool=$1
+batches=$2
+bsize=$3
+psize=$4
+rmode=$5
+pno=$((batches*bsize))
+
+start_benchmark "seq-$(normalize_pool_name $pool)"
+
+with_new_pool $pool 1G $pno
+
+butter $batches $bsize $psize utter-empty
+butter $batches $bsize $psize utter
+
+# just for scrambling memory before measuring reads
+jam $((pno/2))
+
+bread $batches $bsize $rmode read
+
+end_benchmark

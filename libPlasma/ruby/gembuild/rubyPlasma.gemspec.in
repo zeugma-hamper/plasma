@@ -1,0 +1,13 @@
+Gem::Specification.new do |s|
+  s.name                       = "rubyPlasma"
+  s.version                    = "@MAJOR_VERSION@.@MINOR_VERSION@.@MICRO_VERSION@"
+  s.summary                    = "Ruby bindings for Oblong's libPlasma"
+  s.license                    = "Commercial"
+  s.description                = "Ruby Plasma"
+  s.email                      = ['clientsolutions@oblong.com']
+  s.homepage                   = 'http://platform.oblong.com/'
+  s.author                     = "Oblong Industries"
+  s.files                      = Dir.glob("lib/*.rb") + Dir.glob("ext/**/*.{c,h}")
+  s.extensions                 = ["ext/rubyPlasma/extconf.rb"]
+  s.add_development_dependency "rake-compiler"
+end

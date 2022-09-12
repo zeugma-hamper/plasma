@@ -1,0 +1,44 @@
+Source: oblong-gs{{g_speak_version}}-{{project_name}}
+Section: non-free/oblong
+Priority: extra
+Maintainer: The Build Guy <buildguy@example.com>
+## Boilerplate build dependencies first, in alphabetical order
+Build-Depends: debhelper (>= 7.0.50~),
+##  If ubuntu >= 15.04, pull in dh-systemd
+               dh-systemd (>= 1.20) | libc6 (<< 2.20),
+## Want cmake with fix for https://gitlab.kitware.com/cmake/cmake/issues/16293
+## yobuild's 3.6.2 and upstream's 3.7.0 are ok.
+## Ubuntu 17.04 has cmake 3.7.2, which is great.
+##             oblong-yobuild{{yobuild_major}}-cmake | cmake (>= 3.7.0),
+## However, ubuntu 16.04's 3.5.1 is otherwise ok, so let developers slide for now
+               oblong-yobuild{{yobuild_major}}-cmake | cmake (>= 3.5.1),
+               oblong-yobuild{{yobuild_major}}-meson | meson (>= 0.50),
+##  We default to building with ninja
+               ninja-build,
+##  If ubuntu >= 16.04, pull in strip-nondeterminism, for reproducible builds
+               strip-nondeterminism | libc6 (<< 2.23),
+# Project-specific build dependencies, in alphabetical order:
+               oblong-gs{{g_speak_version}}-plasma++,
+# Uncomment to use greenhouse
+#              oblong-greenhouse-gs{{g_speak_version}}x,
+# Uncomment to use webthing
+#              oblong-webthing-{{cef_branch}}-gs{{g_speak_version}}x,
+Standards-Version: 3.8.4
+Homepage: FIXME
+Vcs-Git: FIXME
+Vcs-Browser: FIXME
+
+Package: oblong-gs{{g_speak_version}}-{{project_name}}
+Section: non-free/devel
+Architecture: any
+Depends: ${shlibs:Depends},
+         ${misc:Depends},
+Description: A generic g-speak application
+ Protein-driven, naturally.
+
+Package: oblong-gs{{g_speak_version}}-{{project_name}}-dbg
+Section: non-free/devel
+Architecture: any
+Depends: oblong-gs{{g_speak_version}}-{{project_name}}
+Description: Debug symbols for Oblong {{project_name}}
+ If you run into trouble with {{project_name}}, install this for mo better backtraces.

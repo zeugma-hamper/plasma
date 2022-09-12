@@ -1,0 +1,133 @@
+#!/usr/bin/env python3
+
+import os
+import re
+import shutil
+import sys
+
+
+# There are three different file type modules:
+#  filemagic: ubuntu 16.04
+#  filetype: windows
+#  magic: ubuntu 18.04
+# so try them all, and use whichever one is installed.
+
+mime_module = None
+try:
+  import filetype
+  mime_module = 'filetype'
+except:
+  import magic
+  try:
+    # ubuntu 18.04 uses new magic
+    mymime = magic.Magic(mime=True)
+    mime_module = 'magic'
+  except:
+    # ubuntu 16.04 uses old filemagic
+    # https://stackoverflow.com/questions/25286176/how-to-use-python-magic-5-19-1
+    mymime = magic.open(magic.MAGIC_MIME)
+    mymime.load()
+    mime_module = 'filemagic'
+
+def mime_is_text_file(fname):
+  if mime_module == 'magic':
+    type = mymime.from_file(fname)
+    return (type != None and type.startswith('text'))
+  elif mime_module == 'filemagic':
+    type = mymime.file(fname)
+    return (type != None and type.startswith('text'))
+  elif mime_module == 'filetype':
+    kind = filetype.guess(fname)
+    # filetype doesn't support text file types!  But it does detect
+    # images and archives, which is probably enough; if it's not one
+    # of those, it's prolly text.
+    return (kind == None or kind.mime.startswith('text'))
+  else:
+    print("Sorry, no mime classifier available.")
+    sys.exit(1)
+
+def usage():
+  message(
+"""
+Expand one yovo sample in an obi-like manner (but with an extra level of templating).
+First argument is the output directory.
+Remaining arguments are the template directories, least to most specific.
+
+For example,
+  expand-sample btmp/libNoodoo/samples/generated/bubbles samples/obi-template libNoodoo/obi-template libNoodoo/bubbles
+creates
+  btmp/libNoodoo/samples/generated/bubbles
+containing all the files for that sample, with variables expanded.
+
+This script is generated from expand-sample.in at yovo configure
+time to bake in variable values.
+""")
+
+if len(sys.argv) < 4:
+  print("Usage: expand-sample outdir indir...")
+  sys.exit(1)
+
+# Strip trailing slashes, if any
+outdir = os.path.normpath(sys.argv[1])
+templates = [os.path.normpath(arg) for arg in sys.argv[2:]]
+
+# Values from meson or cmake, expanded by configure_file
+cdata = {
+  'yobuild': '@YOBUILD@',
+  'G_SPEAK_HOME': '@prefix@',
+  'ASAN': '@ASAN@',
+  'TSAN': '@TSAN@',
+  'COVERAGE': '@COVERAGE@',
+  'MAJOR_VERSION': '@MAJOR_VERSION@',
+  'MINOR_VERSION': '@MINOR_VERSION@',
+}
+
+# Compute a few
+cdata['project_name'] = os.path.basename(templates[-1])
+print('project_name = ' + cdata['project_name'])
+cdata['YOVERSION'] = re.sub(r'^.*[^0-9]','',cdata['yobuild'])
+cdata['yobuild_major'] = cdata['YOVERSION']
+cdata['NOSLASH_YOBUILD'] = cdata['yobuild'][1:]
+cdata['NOSLASH_G_SPEAK_HOME'] = cdata['G_SPEAK_HOME'][1:]
+cdata['G_SPEAK_XY'] = cdata['MAJOR_VERSION'] + '.' + cdata['MINOR_VERSION']
+# blarg
+cdata['g_speak_version'] = cdata['G_SPEAK_XY']
+
+# Walk through the templates
+map = {}
+for top in templates:
+  skip = len(top + os.sep)
+  for root, dirs, files in os.walk(top):
+    for file in files:
+       p = os.path.join(root, file)[skip:]
+       map[p] = top
+
+# Expand the chosen input files
+for key in sorted(map.keys()):
+  # Expand filenames a bit, too.  Quote PROJECT to protect it from expansion by configure_file!
+  xkey = re.sub('@' + 'PROJECT@', cdata['project_name'], key)
+  xkey = re.sub('@' + 'G_SPEAK_XY@', cdata['project_name'], xkey)
+  iname = os.path.join(map[key], key)
+  oname = os.path.join(outdir, xkey)
+  # Create output directory if missing
+  os.makedirs(os.path.dirname(oname), mode=0o755, exist_ok=True)
+  if mime_is_text_file(iname):
+    try:
+      # Open input and output file
+      with open(iname, "r") as ifile:
+        # On Windows, avoid outputing CR's
+        with open(oname, "w", newline='\n') as ofile:
+          # Read
+          lines = ifile.readlines()
+          # Expand
+          for key in cdata.keys():
+            pat = r'{{' + key + r'}}'
+            lines = [line.replace(pat, cdata[key]) for line in lines]
+          # Write
+          ofile.writelines(lines)
+      # Success! Continue on to next file.
+      continue
+    except:
+      # fall through to copyfile
+      pass
+  shutil.copyfile(iname, oname)

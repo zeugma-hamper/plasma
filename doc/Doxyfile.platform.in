@@ -1,0 +1,2 @@
+@INCLUDE               = Doxyfile.common.gen
+GENERATE_TAGFILE       = build/g-speak.tag

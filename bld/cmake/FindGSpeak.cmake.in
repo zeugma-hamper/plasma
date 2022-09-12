@@ -1,0 +1,174 @@
+#.rst:
+# FindGSpeak
+# ----------
+#
+# This is for backwards compatibility; new apps should just do
+#   FIND_PACKAGE(Oblong)
+# instead of including FindGSpeak.cmake.
+# See sample apps $G_SPEAK_HOME/src/*/CMakeLists.txt
+#
+# Provides the function FindGSpeak(pkg1 ...)
+# to get access to one or more of the packages that make up Oblong's g-speak
+# Input parameters:
+#   any package listed in $G_SPEAK_HOME/lib/pkgconfig sans .pc suffix (e.g. libLoam, libLoam++, libWebThing, etc)
+# Output variables:
+#   G_SPEAK_LDFLAGS: value to pass to TARGET_LINK_LIBRARIES when linking against the requested modules
+#   G_SPEAK_CFLAGS: value to pass to ADD_COMPILE_OPTIONS when compiling against the requested modules
+#   G_SPEAK_HOME - the directory g-speak was installed in (e.g. /opt/oblong/g-speak3.20)
+#   G_SPEAK_YOBUILD_HOME - the directory oblong's dependencies were installed in (e.g. /opt/oblong/deps-64-10)
+#   G_SPEAK_INCLUDE_DIRS - shouldn't need this if you obey G_SPEAK_CFLAGS, but just in case
+#   CEF_BRANCH - set only if WebThing was requested
+# Side effects:
+#   Prepends g-speak's pkgconfig directories to ENV{PKG_CONFIG_PATH}
+# Note 1: users access this function by doing e.g.
+#  INCLUDE("/opt/oblong/g-speak3.20/lib/cmake/FindGSpeak.cmake")
+# Note 2: users of WebThing must also then do
+#  INCLUDE("${G_SPEAK_YOBUILD_HOME}/lib/cmake/FindCEF${CEF_BRANCH}.cmake")
+# We can't do it here because nested function declarations don't work in cmake
+# Note 3: the variables G_SPEAK_STATIC_(LDFLAGS,CFLAGS,INCLUDE_PATHS) are also set,
+# and should be used instead of the others when linking against static g-speak.
+#
+#
+# Copyright (C) 2015 Oblong Industries
+# Do not redistribute
+
+FUNCTION(GetCefBranch)
+    EXECUTE_PROCESS(
+        COMMAND pkg-config --variable cefbranch libWebThing
+        RESULT_VARIABLE STATUS
+        OUTPUT_VARIABLE CEF_BRANCH
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+    IF (NOT "${STATUS}" EQUAL "0")
+        MESSAGE(FATAL_ERROR "Command 'pkg-config --variable cefbranch libWebThing' failed")
+    ENDIF()
+    SET(CEF_BRANCH ${CEF_BRANCH} PARENT_SCOPE)
+ENDFUNCTION()
+
+FUNCTION(FindGSpeak)
+    # Export a few output variables at top, since we need them too
+    SET(G_SPEAK_HOME "@prefix@")
+    SET(G_SPEAK_HOME "${G_SPEAK_HOME}" PARENT_SCOPE)
+    SET(G_SPEAK_YOBUILD_HOME "@YOBUILD@")
+    SET(G_SPEAK_YOBUILD_HOME "${G_SPEAK_YOBUILD_HOME}" PARENT_SCOPE)
+
+    IF (WIN32)
+        SET(PATHSEP ";")
+    ELSE()
+        SET(PATHSEP ":")
+    ENDIF()
+    # Point pkg-config at our .pc files
+    SET(OLDPATH "")
+    IF (NOT $ENV{PKG_CONFIG_PATH} STREQUAL "")
+        SET(OLDPATH $ENV{PKG_CONFIG_PATH})
+        SET(OLDPATH "${PATHSEP}${OLDPATH}")
+    ENDIF()
+
+    # Linux puts some shared libraries in multiarch directories
+    if ((NOT WIN32) AND (NOT APPLE))
+        # $ dpkg-architecture -qDEB_BUILD_GNU_TYPE
+        find_program(DPKG_ARCH_CMD dpkg-architecture)
+        if(NOT DPKG_ARCH_CMD)
+          message(STATUS "No dpkg-architecture in your path, defaulting to x86_64-linux-gnu.")
+          set(OB_DEB_BUILD_GNU_TYPE x86_64-linux-gnu)
+        endif()
+        execute_process(COMMAND "${DPKG_ARCH_CMD}" -qDEB_BUILD_GNU_TYPE
+          OUTPUT_VARIABLE OB_DEB_BUILD_GNU_TYPE
+          OUTPUT_STRIP_TRAILING_WHITESPACE
+          )
+        SET(PKG_CONFIG_PATH "\
+${G_SPEAK_HOME}/lib/${OB_DEB_BUILD_GNU_TYPE}/pkgconfig${PATHSEP}\
+${G_SPEAK_HOME}/lib/pkgconfig${PATHSEP}\
+${G_SPEAK_YOBUILD_HOME}/lib/${OB_DEB_BUILD_GNU_TYPE}/pkgconfig${PATHSEP}\
+${G_SPEAK_YOBUILD_HOME}/lib/pkgconfig${PATHSEP}\
+")
+    else()
+        SET(PKG_CONFIG_PATH "${G_SPEAK_HOME}/lib/pkgconfig${PATHSEP}${G_SPEAK_YOBUILD_HOME}/lib/pkgconfig")
+    endif()
+
+    SET(PKG_CONFIG_PATH "${PKG_CONFIG_PATH}${OLDPATH}")
+    SET(ENV{PKG_CONFIG_PATH} "${PKG_CONFIG_PATH}")
+    MESSAGE(STATUS "Setting environment variable PKG_CONFIG_PATH=${PKG_CONFIG_PATH}")
+
+    # Make sure yobuild is on the path, else we won't find pkg-config on mac
+    # FIXME: only do this if it's not there already
+    set(ENV{PATH} "$ENV{PATH}${PATHSEP}${G_SPEAK_YOBUILD_HOME}/bin")
+    MESSAGE(STATUS "Setting environment variable PATH=$ENV{PATH}")
+
+    find_package(PkgConfig REQUIRED)
+
+    # Walk through them one by one to get (slightly) better errors
+    FOREACH(lib ${ARGN})
+        PKG_CHECK_MODULES(${lib} ${lib})
+        IF (NOT "${${lib}_FOUND}" STREQUAL "1")
+            MESSAGE(FATAL_ERROR "Could not find pkg-config module ${lib} or one of its dependencies")
+        ENDIF()
+        IF ("${${lib}_LIBRARIES}${${lib}_CFLAGS}" STREQUAL "")
+            MESSAGE(FATAL_ERROR "Found pkg-config module ${lib}, but it was empty, perhaps a dependency is missing.")
+        ENDIF()
+        IF (lib MATCHES WebThing)
+            GetCefBranch()
+            SET(CEF_BRANCH "${CEF_BRANCH}" PARENT_SCOPE)
+            MESSAGE(STATUS " WebThing is linked against CEF branch ${CEF_BRANCH}")
+        ENDIF()
+    ENDFOREACH()
+
+    # Then let pkg-config deduplicate options
+    # (required, otherwise we get corrupt .dylibs on mac, see bug 15121)
+    PKG_CHECK_MODULES(G_SPEAK REQUIRED ${ARGN})
+
+    # Fun fact: static libraries have to come after their references, else symbols won't be found.
+    # Easiest workaround is to list all libraries twice.
+    SET(G_SPEAK_STATIC_LDFLAGS " ${G_SPEAK_STATIC_LDFLAGS} ${G_SPEAK_STATIC_LDFLAGS}")
+
+    foreach(XPREFIX "G_SPEAK" "G_SPEAK_STATIC")
+
+    if (APPLE)
+        # Even the above isn't enough.  Somehow any -rpath from pkgconfig
+        # is dangerous; cmake generates its own clashing ones.  So filter 'em out.
+        # (required, otherwise we get corrupt .dylibs on mac, see bug 15121)
+        STRING(REGEX REPLACE "-Wl,-rpath,[^; ]*" "" ${XPREFIX}_LDFLAGS "${${XPREFIX}_LDFLAGS}")
+    endif()
+
+    # gnutls.pc uses -R instead of -rpath on all platforms, as it's under the
+    # mistaken impression that you'll be linking using 'libtool --mode=link gcc'.
+    # cf. https://gitlab.com/gnutls/gnutls/issues/49
+    # So filter those out, too, and hope nobody actually puts a .la in a .pc file,
+    # as Gnome seems to do.
+    STRING(REGEX REPLACE "[; ]-R[^; ]*" "" ${XPREFIX}_LDFLAGS "${${XPREFIX}_LDFLAGS}")
+
+    if (NOT WIN32)
+        # Insulate user from .pc files which use -I instead of -isystem,
+        # and have warnings with recent compilers.
+        STRING(REPLACE "-I" "-isystem " ${XPREFIX}_CFLAGS "${${XPREFIX}_CFLAGS}")
+    endif()
+
+    # Remove leading and trailing whitespace, or cmake might think the whole thing is a library name.
+    STRING(STRIP "${${XPREFIX}_LDFLAGS}" ${XPREFIX}_LDFLAGS)
+
+    # Kludge: remove mysterious literal -L$libdir :-(
+    # (Seen on osx1015)
+    STRING(REPLACE "-L$libdir" "" ${XPREFIX}_LDFLAGS "${${XPREFIX}_LDFLAGS}")
+
+    # pkgconfig and cmake aren't *quite* on speaking terms; translate a bit for them.
+    STRING(REPLACE "-framework;Chromium;Embedded;Framework" "-framework 'Chromium Embedded Framework'" ${XPREFIX}_LDFLAGS "${${XPREFIX}_LDFLAGS}")
+    IF(NOT WIN32)
+        # with visual studio, translating semicolons to spaces in LDFLAGS causes link failure, see bug 15772
+        STRING(REPLACE ";" " " ${XPREFIX}_LDFLAGS "${${XPREFIX}_LDFLAGS}")
+    ENDIF()
+    STRING(REPLACE ";" " " ${XPREFIX}_CFLAGS "${${XPREFIX}_CFLAGS}")
+
+    # Remove leading and trailing whitespace, or cmake might think the whole thing is a library name, or abort.
+    STRING(STRIP "${${XPREFIX}_CFLAGS}" "${XPREFIX}_CFLAGS")
+    STRING(STRIP "${${XPREFIX}_LDFLAGS}" "${XPREFIX}_LDFLAGS")
+
+    # Export output variable to parent scope
+    SET(${XPREFIX}_LDFLAGS "${${XPREFIX}_LDFLAGS}" PARENT_SCOPE)
+    SET(${XPREFIX}_CFLAGS "${${XPREFIX}_CFLAGS}" PARENT_SCOPE)
+    SET(${XPREFIX}_INCLUDE_DIRS "${${XPREFIX}_INCLUDE_DIRS}" PARENT_SCOPE)
+
+    MESSAGE(STATUS "${XPREFIX}_LDFLAGS is ${${XPREFIX}_LDFLAGS}")
+    MESSAGE(STATUS "${XPREFIX}_CFLAGS is ${${XPREFIX}_CFLAGS}")
+    MESSAGE(STATUS "${XPREFIX}_INCLUDE_DIRS is ${${XPREFIX}_INCLUDE_DIRS}")
+    endforeach()
+ENDFUNCTION()

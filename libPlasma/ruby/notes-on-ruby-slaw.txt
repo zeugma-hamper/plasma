@@ -1,0 +1,257 @@
+-*- coding: utf-8 -*-
+¡¡¡¡¡¡¡¡¡ IF YOU WANT TO USE JSON, YOU NEED THE JSON GEM INSTALLED !!!!!!!!!
+
+= Building and running test code
+
+== build the ruby extension
+
+  # you must have configured without --disable-shared
+  make
+
+
+== run some sample code
+
+  # runruby makes sure the environment is set up and the correct ruby is used
+  ./runruby.rb slaw-tests.rb
+
+
+== run all the tests
+
+  make check
+
+
+= slaw construction
+
+do a little require/include dance
+
+  require 'Pool'
+  include Plasma
+
+implicit (atomic) types. int64, float64, boolean, string
+
+  s = Slaw.new(43.4)
+  s = Slaw.from_yaml(43.4)
+
+explicit (atomic) types. we attempt to coerce values to types
+
+  s = Slaw.new(43.4, :int32)
+
+we install a helper function in the Kernel module that shortens the
+above examples to:
+
+  s = float64(43.4)
+  s = int32(43.4)
+
+these type-named constructors are available for all of the basic
+numeric types, the v2, v3 and v4 types, and for basic numeric type
+arrays.
+
+= lists
+
+implicit typing of all values
+
+  s = Slaw.new( [12, 13, 14, "oranges"] )
+
+giving a single atomic type tag means that we attempt to coerce all
+the values in the list to that type
+
+  s = Slaw.new( [12, 13, 14, "oranges"], :int32 )
+  s[3] == 0
+
+giving an array of atomic type tags means that we attempt to coerce
+each item in the value list according to a matching item in the type
+list. leftovers go uncoerced.
+
+  s = Slaw.new( [12, 13.0, 14, "oranges"], [:int32,:int32,:int32] )
+  s[1] == 13
+  s[3] == "oranges"
+
+slaw arrays. constructed as per lists but with a single array type tag
+
+  s = Slaw.new( [12, 13.0, 14, 15], :int32_array )
+
+and vectors, similarly
+
+  s = Slaw.new( [12, 13.0, 14], :v3float64 )
+  s = v3float64( 12.0, 13.0, 14.0 )
+
+= maps
+
+maps work as you might expect.
+
+  s = Slaw.new( {"one" => 1.0, "two" => 2.0} )
+  s = Slaw.new( {"one" => 1.0, "two" => unt32(2.0)} )
+
+= slaw of slawx
+
+of course, we can reference slaw themselves in our constructors
+
+ s1 = Slaw.new( 43.0 ); s2 = Slaw.new( 44.0 )
+ s3 = Slaw.new( [s1, s2] )
+
+= deconstruction
+
+you can pull the value out of an atomic slaw
+
+  s = Slaw.new( 43.0 )
+  s.emit                  # => 43.0
+
+you can also use emit on lists, maps and vectors
+
+  s = Slaw.new( [1,2,3] )
+  s.emit                  # => [1,2,3]
+
+  s = Slaw.new( {"one"=>1} )
+  s.emit                  # => {"one"=>1}
+
+  s = v3float64(1,2,3)
+  s.emit                  # => [1.0, 2.0, 3.0]
+
+for list, map, and array types you generally deconstruct using [] and
+count()
+
+  s = int32_array( [3,2,1,0,-1] )
+  s[-3]                             # => 1
+  s.count                           # => 5
+
+for vect types, [] also works, but count is always 1
+
+  s = v3float64( 1, 2, 3 )
+  s[2]                              # => 3.0
+
+(count is 1, because atomic?() is true, for vects)
+
+  s.atomic?                         # => true
+
+you have the following type introspection methods available
+
+  s.nil?
+  s.atomic?
+  s.array?
+  s.composite?
+  s.list?
+  s.map?
+  s.protein?
+  s.boolean?
+  s.vect?
+  s.string?
+  s.cons?
+
+= conversions and duck-typing
+
+== ruby-ish conversions. generally, these give the same value as emit
+   would, after a type-check to make sure they are legal for the
+   particular slaw they are called on. illegal calls raise a
+   SlawTypeNoMethodError
+
+  to_a (we get this automatically from Enumerable)
+                                       - list, map, array, vect
+  to_ary                               - list, array
+
+  to_hash                              - map
+
+  to_s                                 - any slaw to yaml string,
+                                         special-cased to be same as
+                                         to_str for string slawx
+  to_str                               - string
+
+  to_i                                 - string, numeric int/unt/floats
+  to_int                               - numeric int/unt/floats
+  to_f                                 - string, numeric int/unt/floats
+
+== methods which have a slaw type check embedded in them, and which
+   raise a SlawTypeNoMethodError on an illegal call. respond_to? also
+   understands these internal duck-typing characteristics, and gives a
+   correct answer when asked whether a given slaw supports one of
+   these methods (or the above conversions)
+
+  each (and all Enumerable methods)    - list, map, array, vect
+  keys                                 - map
+  values                               - map
+  car                                  - cons
+  cdr                                  - cons
+  []                                   - list, map, array, vect
+  nth_slaw                             - list, map
+
+= proteins
+
+make a protein by passing a descrips list and an ingests list to
+Protein.new()
+
+  umm = slaw("two-point-two")
+  prt = Protein.new( ["list", "of", "descrips", "words"],
+                     { "one" => 1.0,
+                       "two" => 2.0,
+                       umm   => 2.2 } )
+
+deconstruct a protein by asking for its descrips and ingests. these
+two methods return a slaw (list and map, respectively)
+
+  prt.descrips.count                # => 4
+  prt.descrips[3]                   # => "words"
+  prt.ingests["one"]                # => 1.0
+
+= more careful deconstruction
+
+if you need to get at the raw slaw inside a list, you can ask for the
+nth_slaw()
+
+  prt.descrips.nth_slaw[3].class     # => Plasma::Slaw
+  prt.descrips.nth_slaw[3].emit      # => "words"
+
+  prt.ingests.nth_slaw[0].type_tag   # => :cons
+  prt.ingests.nth_slaw[0].car.emit   # => "one"
+
+and you can create ordered maps, if you need to specify ordering of
+key/value pairs (as you could using the c plasma API)
+
+  s = Slaw.new( ["one", 1,
+                 "two", 2], :map )
+  s.nth_slaw[0].cdr.emit             # => 1
+
+this works for protein ingests, too, just by passing an array instead
+of a hash
+
+  prt = Protein.new( ["ingests", "here", "will", "order", "properly"],
+                     ["one", 1,
+                      "two", 2] )
+
+= the c bits inside
+
+to inspect a slaw (or protein, which is, of course, a slaw), call
+_c_spew_stderr()
+
+  prt._c_spew_stderr
+
+        slaw[40q.0x1fec3a0]: PROT: ((
+        descrips:
+        slaw[14q.0x1fec3a4]: LIST (4 elems): {
+         1: slaw[3q.0x1fec3ac]: STR: "list"
+         2: slaw[2q.0x1fec3b8]: STR: "of"
+         3: slaw[4q.0x1fec3c0]: STR: "descrips"
+         4: slaw[3q.0x1fec3d0]: STR: "words"
+         }
+        ingests:
+        slaw[23q.0x1fec3dc]: LIST (3 elems): {
+         1: slaw[6q.0x1fec3e4]: CONS:
+         L: slaw[2q.0x1fec3e8]: STR: "one"
+         R: slaw[3q.0x1fec3f0]: FLOAT64 = 1.000000
+         2: slaw[6q.0x1fec3fc]: CONS:
+         L: slaw[2q.0x1fec400]: STR: "two"
+         R: slaw[3q.0x1fec408]: FLOAT64 = 2.000000
+         3: slaw[9q.0x1fec414]: CONS:
+         L: slaw[5q.0x1fec418]: STR: "two-point-two"
+         R: slaw[3q.0x1fec42c]: FLOAT64 = 2.200000
+         }
+         ))
+
+= pools
+
+Basic pool functionality is hacked together, but not correctly or
+completely
+
+  h = Hose.new( "rt" )
+  prot = h.next
+  prot.descrips[0]
+  prot.ingests["string"]
+
