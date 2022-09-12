@@ -13,7 +13,7 @@ data itself.
 
 A process deposits Proteins into, and retrieves Proteins from, network-soluble
 ring buffers called 'Pools'. Multiple processes can be simultaneously
-connected (via 'Hoses') to a single pool, with each both depoisiting and
+connected (via 'Hoses') to a single pool, with each both depositing and
 retrieving Proteins. The ordering of Proteins stored in a Pool is monotonic
 and immutable, such that all retrieving processes observe the same
 sequence. Processes most typically read from Pools in something like real
