@@ -18,6 +18,7 @@
 #include "libPlasma/c/plasma-retorts.h"
 #include "libPlasma/c/private/pool-tls.h"
 #include "libPlasma/c/private/pool_impl.h"
+#include "libPlasma/c/private/plasma-private.h"
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 #include <openssl/rand.h>
@@ -903,4 +904,9 @@ ob_retort ob_ossl_setup_certs (SSL_CTX *ctx, const char *certificate_chain,
     }
 
   return OB_OK;
+}
+
+char *plasma_ssl_version (void)
+{
+  return strdup (SSLeay_version (SSLEAY_VERSION));
 }

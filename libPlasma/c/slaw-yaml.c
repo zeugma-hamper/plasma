@@ -2286,3 +2286,10 @@ fail:
                                  " but expected %" OB_FMT_64 "u\n",
                      str, got, expected);
 }
+
+char *plasma_yaml_version (void)
+{
+  char buf[80];
+  snprintf (buf, sizeof (buf), "libYaml %s", yaml_get_version_string ());
+  return strdup (buf);
+}

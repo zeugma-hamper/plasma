@@ -151,6 +151,8 @@ OB_HIDDEN OB_CONST bool ob_i_am_big_endian (void);
 #define MAX_SLAW_SIZE                                                          \
   ((sizeof (void *) < 8) ? (OB_GIGABYTE) : (256 * OB_GIGABYTE))
 
+OB_HIDDEN char *plasma_yaml_version (void);
+OB_HIDDEN char *plasma_ssl_version (void);
 
 #ifdef __cplusplus
 }

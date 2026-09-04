@@ -16,6 +16,7 @@ set(
   Plasma_SOURCES
 
   eintr-helper.c
+  plasma-info.c
   plasma-util.c
   pool.c
   pool_cmd.c
@@ -92,6 +93,7 @@ set (
   Plasma_HEADERS
 
   c-plasma.h
+  plasma-info.h
   plasma-retorts.h
   plasma-types.h
   pool_cmd.h
