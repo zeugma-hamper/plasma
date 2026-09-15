@@ -3,6 +3,7 @@
 
 #include "libPlasma/c/private/pool-tls.h"
 #include "libPlasma/c/plasma-retorts.h"
+#include "libPlasma/c/private/plasma-private.h"
 #include "libLoam/c/ob-vers.h"
 
 ob_retort ob_tls_banner (FILE *where)
@@ -45,4 +46,9 @@ ob_retort ob_tls_client_launch_thread (int clear_sock, int cipher_sock,
 ob_retort ob_tls_client_join_thread (pthread_t thr)
 {
   return POOL_NO_TLS;
+}
+
+char *plasma_ssl_version (void)
+{
+  return NULL;
 }

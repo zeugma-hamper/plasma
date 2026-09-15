@@ -50,6 +50,16 @@ OB_LOAM_API char *ob_get_version (ob_version_of_what what);
 OB_LOAM_API void ob_banner (FILE *where);
 
 /**
+ * Same as ob_banner(), but prints the banner to a buffer passed
+ * by the caller.  80 characters should be enough; 160 should be more
+ * than enough.
+ *
+ * Returns the number of characters that were used, or that would have
+ * been needed.
+ */
+OB_LOAM_API size_t ob_banner_to_buf (char *buf, size_t buf_len);
+
+/**
  * Argument to ob_get_system_info()
  */
 typedef enum ob_system_info {

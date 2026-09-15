@@ -16,6 +16,7 @@
 #include "libPlasma/c/slaw-path.h"
 #include "libPlasma/c/slaw-string.h"
 #include "libPlasma/c/slaw-walk.h"
+#include "libPlasma/c/plasma-info.h"
 
 
 #endif /* PLASMA_ELECTROPHORESIS */

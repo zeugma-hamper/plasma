@@ -496,19 +496,36 @@ char *ob_get_version (ob_version_of_what what)
     }
 }
 
-void ob_banner (FILE *where)
+size_t ob_banner_to_buf (char *buf, size_t buf_len)
 {
   char *yovo = ob_get_version (OB_VERSION_OF_GSPEAK);
   // Omit year in copyright because CODING-STYLE says to,
   // plus it just gets out of date anyway.
-  fprintf (where,
+  int ret = snprintf (buf, buf_len,
            PRODNAME " (c) Oblong Industries and ANIMIST contributors - %s"
 #ifdef GREENHOUSE
                   "+gh"
 #endif
-                  "\n",
-           yovo);
+           , yovo);
   free (yovo);
+
+  if (ret < 0)
+    {
+      if (buf_len > 0)
+        buf[0] = 0;
+      return 0;
+    }
+  else
+    {
+      return (size_t) ret;
+    }
+}
+
+void ob_banner (FILE *where)
+{
+  char buf[160];
+  ob_banner_to_buf (buf, sizeof (buf));
+  fprintf (where, "%s\n", buf);
 #if defined(__GNUC__) && !defined(__OPTIMIZE__)
   fprintf (where, "!!! WARNING: Compiled without optimization, "
                   "which will reduce performance !!!\n");
