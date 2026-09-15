@@ -165,3 +165,14 @@
 * Add `SpewToString()` methods to C++ Plasma.  This makes it easier to
   spew directly to a `Str`.
   [#26](https://github.com/plasma-hamper/plasma/pull/26)
+
+* Add new function `ob_banner_to_buf()` in `ob-vers.h`, which provides
+  the same information as `ob_banner()` (i. e. copyright notice and
+  version), but as a string, rather than to a `FILE *`.
+  [#27](https://github.com/plasma-hamper/plasma/pull/27)
+
+* Add new function `plasma_info()` in new header `plamsa-info.h`,
+  which returns a slaw map containing information about whether
+  libYaml and OpenSSL are enabled, and if so, the version of the
+  library being used.
+  [#27](https://github.com/plasma-hamper/plasma/pull/27)
